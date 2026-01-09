@@ -112,10 +112,15 @@ int WPILogWriter::GetOrCreateEntry(std::string_view key, const LogValue& value) 
     case LogType::kRaw:
       entryId = m_log->Start(keyStr, "raw");
       break;
-    case LogType::kStruct:
+    case LogType::kStruct: {
+      // For structs, use "struct:TypeName" format (e.g., "struct:Pose2d")
+      std::string typeStr = "struct:" + value.GetTypeString();
+      entryId = m_log->Start(keyStr, typeStr);
+      break;
+    }
     case LogType::kStructArray: {
-      // For structs, use the type string
-      std::string typeStr = value.GetTypeString();
+      // For struct arrays, use "struct:TypeName[]" format (e.g., "struct:Pose2d[]")
+      std::string typeStr = "struct:" + value.GetTypeString() + "[]";
       entryId = m_log->Start(keyStr, typeStr);
       break;
     }

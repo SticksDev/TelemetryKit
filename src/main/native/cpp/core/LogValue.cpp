@@ -58,11 +58,25 @@ LogValue::LogValue(const std::vector<uint8_t>& value, bool isStruct)
 LogValue::LogValue(const std::vector<uint8_t>& data, std::string_view typeString)
   : m_type(LogType::kStruct), m_value(data), m_typeString(typeString) {}
 
+// Struct constructor with type string and schema
+LogValue::LogValue(const std::vector<uint8_t>& data, std::string_view typeString,
+                   std::span<const uint8_t> schema)
+  : m_type(LogType::kStruct), m_value(data), m_typeString(typeString),
+    m_schema(schema.begin(), schema.end()) {}
+
 // Struct array constructor
 LogValue::LogValue(const std::vector<uint8_t>& data, std::string_view typeString, bool isArray)
   : m_type(isArray ? LogType::kStructArray : LogType::kStruct),
     m_value(data),
     m_typeString(typeString) {}
+
+// Struct array constructor with schema
+LogValue::LogValue(const std::vector<uint8_t>& data, std::string_view typeString,
+                   std::span<const uint8_t> schema, bool isArray)
+  : m_type(isArray ? LogType::kStructArray : LogType::kStruct),
+    m_value(data),
+    m_typeString(typeString),
+    m_schema(schema.begin(), schema.end()) {}
 
 std::string LogValue::GetTypeString() const {
   // For structs, return the custom type string

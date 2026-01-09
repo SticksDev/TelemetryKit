@@ -8,6 +8,8 @@
 #include <variant>
 #include <vector>
 
+#include <wpi/struct/Struct.h>
+
 namespace telemetrykit {
 
 /**
@@ -75,8 +77,16 @@ class LogValue {
   // Constructor for struct data with type string (MUST come before bool constructor)
   LogValue(const std::vector<uint8_t>& data, std::string_view typeString);
 
+  // Constructor for struct data with type string and schema
+  LogValue(const std::vector<uint8_t>& data, std::string_view typeString,
+           std::span<const uint8_t> schema);
+
   // Constructor for struct arrays
   LogValue(const std::vector<uint8_t>& data, std::string_view typeString, bool isArray);
+
+  // Constructor for struct arrays with schema
+  LogValue(const std::vector<uint8_t>& data, std::string_view typeString,
+           std::span<const uint8_t> schema, bool isArray);
 
   // Constructor for raw binary data (no default parameter to avoid ambiguity)
   LogValue(const std::vector<uint8_t>& value, bool isStruct);
@@ -151,6 +161,14 @@ class LogValue {
   LogType m_type;
   ValueVariant m_value;
   std::string m_typeString;  // For struct types (e.g., "Pose2d")
+  std::vector<uint8_t> m_schema;  // For struct schema bytes (NT4 schema publishing)
+
+ public:
+  /**
+   * Get the schema bytes for struct types.
+   * Returns empty span for non-struct types.
+   */
+  std::span<const uint8_t> GetSchema() const { return m_schema; }
 };
 
 /**
@@ -158,7 +176,7 @@ class LogValue {
  *
  * Example:
  *   frc::Pose2d pose{...};
- *   LogValue value = LogValue::FromStruct(pose);
+ *   LogValue value = MakeStructValue(pose);
  */
 template<typename T>
 LogValue MakeStructValue(const T& structValue) {
@@ -169,8 +187,11 @@ LogValue MakeStructValue(const T& structValue) {
   std::vector<uint8_t> buffer(descriptor.GetSize());
   descriptor.Pack(buffer, structValue);
 
-  // Create LogValue with type string
-  return LogValue(buffer, std::string(descriptor.GetTypeName()));
+  // Get schema bytes
+  auto schemaBytes = wpi::GetStructSchemaBytes<T>();
+
+  // Create LogValue with type string and schema
+  return LogValue(buffer, std::string(descriptor.GetTypeName()), schemaBytes);
 }
 
 /**
@@ -188,8 +209,11 @@ LogValue MakeStructArrayValue(std::span<const T> structArray) {
     descriptor.Pack(slice, structArray[i]);
   }
 
-  // Create LogValue with type string and array flag
-  return LogValue(buffer, std::string(descriptor.GetTypeName()), true);
+  // Get schema bytes
+  auto schemaBytes = wpi::GetStructSchemaBytes<T>();
+
+  // Create LogValue with type string, schema, and array flag
+  return LogValue(buffer, std::string(descriptor.GetTypeName()), schemaBytes, true);
 }
 
 }  // namespace telemetrykit

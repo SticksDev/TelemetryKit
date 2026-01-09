@@ -171,10 +171,21 @@ void NetworkTablesReceiver::PublishValue(std::string_view key, const LogValue& v
 
     case LogType::kStruct:
     case LogType::kStructArray: {
-      // For structs, publish as raw with type string metadata
+      // For structs, publish as RawTopic with type string metadata.
+      // NT4 clients like AdvantageScope will use the type string and schema to deserialize.
       if (pubIt == m_publishers.end()) {
+        std::string typeStr = value.GetTypeString();  // e.g., "Pose2d", "SwerveModuleState"
+
+        // Publish struct schema to NetworkTables if we have it
+        auto schema = value.GetSchema();
+        if (!schema.empty()) {
+          // Use "struct:TypeName" format for schema registration
+          std::string fullTypeStr = "struct:" + typeStr;
+          m_inst.AddSchema(typeStr, fullTypeStr, schema);
+        }
+
+        // Create RawTopic publisher with type string
         auto topic = m_inst.GetRawTopic(keyStr);
-        std::string typeStr = value.GetTypeString();
         m_publishers[keyStr] = topic.Publish(typeStr);
         pubIt = m_publishers.find(keyStr);
       }
