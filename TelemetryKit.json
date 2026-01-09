@@ -1,0 +1,30 @@
+{
+  "fileName": "TelemetryKit.json",
+  "name": "TelemetryKit",
+  "version": "1.0.0",
+  "frcYear": "2026beta",
+  "uuid": "bf2eaa28-c978-45c9-8b1e-206f7620bd79",
+  "mavenUrls": [],
+  "jsonUrl": "",
+  "jniDependencies": [],
+  "javaDependencies": [],
+  "cppDependencies": [
+    {
+      "groupId": "dev.sticks.telemetrykit",
+      "artifactId": "TelemetryKit-cpp",
+      "version": "1.0.0",
+      "libName": "TelemetryKit",
+      "headerClassifier": "headers",
+      "sharedLibrary": false,
+      "skipInvalidPlatforms": true,
+      "binaryPlatforms": [
+        "windowsx86-64",
+        "linuxarm64",
+        "linuxx86-64",
+        "linuxathena",
+        "linuxarm32",
+        "osxuniversal"
+      ]
+    }
+  ]
+}
