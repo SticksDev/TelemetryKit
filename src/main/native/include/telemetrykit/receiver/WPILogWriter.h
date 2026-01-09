@@ -7,8 +7,8 @@
 
 #include <wpi/DataLogWriter.h>
 
-#include "telemetrykit/LogDataReceiver.h"
-#include "telemetrykit/LogValue.h"
+#include "telemetrykit/receiver/LogDataReceiver.h"
+#include "telemetrykit/core/LogValue.h"
 
 namespace telemetrykit {
 
@@ -18,11 +18,7 @@ namespace telemetrykit {
  * Uses WPILib's DataLog format for file output. Files are compatible with
  * AdvantageScope, Glass, and other WPILib visualization tools.
  *
- * Features:
- *   - Field-change-only optimization (only logs when values change)
- *   - On-demand entry creation
- *   - Support for all LogValue types
- *   - Thread-safe
+ * This supports all LogValue types, as well as to thread-safe logging via LogTable.
  *
  * Example Usage:
  *
@@ -41,13 +37,7 @@ class WPILogWriter : public LogDataReceiver {
    */
   explicit WPILogWriter(std::string_view logPath = "/home/lvuser/logs");
 
-  /**
-   * Destructor - ensures log file is flushed and closed.
-   */
-  ~WPILogWriter() override;
-
   // LogDataReceiver interface
-
   void OnStart() override;
   void OnUpdate(const LogTable& table, int64_t timestamp) override;
   void OnEnd() override;

@@ -1,4 +1,4 @@
-#include "telemetrykit/LogTable.h"
+#include "telemetrykit/core/LogTable.h"
 
 #include <mutex>
 

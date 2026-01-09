@@ -14,26 +14,7 @@ class LogTable;
  * Examples: WPILog file writer, NetworkTables publisher, console logger.
  *
  * Each receiver is responsible for its own change detection and optimization.
- *
- * Example Implementation:
- *
- *   class MyReceiver : public LogDataReceiver {
- *    public:
- *     void OnStart() override {
- *       // Initialize resources (open files, create publishers, etc.)
- *     }
- *
- *     void OnUpdate(const LogTable& table, int64_t timestamp) override {
- *       // Process the log table
- *       // Perform change detection if desired
- *       // Write/publish data
- *     }
- *
- *     void OnEnd() override {
- *       // Cleanup resources (close files, etc.)
- *     }
- *   };
- */
+*/
 class LogDataReceiver {
  public:
   virtual ~LogDataReceiver() = default;
@@ -41,10 +22,7 @@ class LogDataReceiver {
   /**
    * Called when logging starts.
    *
-   * Use this to initialize resources:
-   *   - Open log files
-   *   - Create NetworkTables publishers
-   *   - Allocate buffers
+   * Use this to initialize resources in custom receivers.
    */
   virtual void OnStart() = 0;
 
@@ -62,10 +40,7 @@ class LogDataReceiver {
   /**
    * Called when logging ends.
    *
-   * Use this to cleanup resources:
-   *   - Close log files
-   *   - Flush buffers
-   *   - Release publishers
+   * You should deinit resources in custom receivers here.
    */
   virtual void OnEnd() = 0;
 };

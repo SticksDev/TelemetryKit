@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "telemetrykit/LogValue.h"
+#include "telemetrykit/core/LogValue.h"
 
 using namespace telemetrykit;
 

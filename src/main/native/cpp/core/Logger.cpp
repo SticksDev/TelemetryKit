@@ -1,9 +1,9 @@
-#include "telemetrykit/Logger.h"
+#include "telemetrykit/core/Logger.h"
 
 #include <frc/RobotController.h>
 
-#include "telemetrykit/LogDataReceiver.h"
-#include "telemetrykit/LoggableInputs.h"
+#include "telemetrykit/receiver/LogDataReceiver.h"
+#include "telemetrykit/core/LoggableInputs.h"
 
 namespace telemetrykit {
 

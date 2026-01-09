@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <thread>
-#include "telemetrykit/LogTable.h"
+#include "telemetrykit/core/LogTable.h"
 
 using namespace telemetrykit;
 

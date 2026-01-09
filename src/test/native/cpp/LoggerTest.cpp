@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include "telemetrykit/Logger.h"
-#include "telemetrykit/LogDataReceiver.h"
-#include "telemetrykit/LoggableInputs.h"
+#include "telemetrykit/core/Logger.h"
+#include "telemetrykit/receiver/LogDataReceiver.h"
+#include "telemetrykit/core/LoggableInputs.h"
 
 using namespace telemetrykit;
 

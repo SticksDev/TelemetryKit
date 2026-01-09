@@ -1,4 +1,4 @@
-#include "telemetrykit/LogValue.h"
+#include "telemetrykit/core/LogValue.h"
 
 namespace telemetrykit {
 

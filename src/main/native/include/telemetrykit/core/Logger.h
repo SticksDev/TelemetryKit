@@ -6,8 +6,8 @@
 #include <string_view>
 #include <vector>
 
-#include "telemetrykit/LogTable.h"
-#include "telemetrykit/LogValue.h"
+#include "telemetrykit/core/LogTable.h"
+#include "telemetrykit/core/LogValue.h"
 
 namespace telemetrykit {
 
@@ -21,43 +21,6 @@ class LoggableInputs;
  * The Logger is the central hub for recording telemetry data. It manages
  * the log table and coordinates with receivers (file writers, NetworkTables
  * publishers, etc.).
- *
- * Lifecycle:
- *   1. Start() - Initialize logging and receivers
- *   2. PeriodicBeforeUser() - Call before user code each cycle
- *   3. User code runs and calls RecordOutput()
- *   4. PeriodicAfterUser() - Send data to receivers
- *   5. End() - Cleanup and close files
- *
- * Example Usage:
- *
- *   void RobotInit() {
- *     auto& logger = Logger::GetInstance();
- *     logger.Start();
- *
- *     logger.AddReceiver(
- *       std::make_unique<WPILogWriter>("/home/lvuser/logs")
- *     );
- *     logger.AddReceiver(
- *       std::make_unique<NT4Publisher>()
- *     );
- *   }
- *
- *   void RobotPeriodic() {
- *     auto& logger = Logger::GetInstance();
- *     logger.PeriodicBeforeUser();
- *
- *     // Update inputs (IO pattern)
- *     m_gyro->UpdateInputs(m_gyroInputs);
- *     auto gyroTable = logger.GetTable("/Gyro");
- *     m_gyroInputs.ToLog(gyroTable);
- *
- *     // Log outputs
- *     logger.RecordOutput("/Drivetrain/Pose", m_drivetrain.GetPose());
- *     logger.RecordOutput("/Drivetrain/Speed", m_drivetrain.GetSpeed());
- *
- *     logger.PeriodicAfterUser();
- *   }
  */
 class Logger {
  public:
@@ -121,6 +84,7 @@ class Logger {
    * Record an output value (LogValue overload).
    */
   void RecordOutput(std::string_view key, const LogValue& value);
+
 
   /**
    * Process input data (for AdvantageKit-style IO pattern).

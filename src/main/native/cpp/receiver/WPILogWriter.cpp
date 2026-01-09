@@ -1,21 +1,16 @@
-#include "telemetrykit/WPILogWriter.h"
+#include "telemetrykit/receiver/WPILogWriter.h"
 
 #include <chrono>
 #include <filesystem>
 #include <iomanip>
 #include <sstream>
 
-#include "telemetrykit/LogTable.h"
+#include "telemetrykit/core/LogTable.h"
 
 namespace telemetrykit {
 
 WPILogWriter::WPILogWriter(std::string_view logPath)
   : m_logPath(logPath) {}
-
-WPILogWriter::~WPILogWriter() {
-  // DataLogWriter destructor will handle cleanup
-  // No explicit flush needed as reset() was already called in OnEnd()
-}
 
 void WPILogWriter::OnStart() {
   // Create log directory if it doesn't exist

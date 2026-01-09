@@ -1,43 +1,14 @@
 #pragma once
 
-/**
- * TelemetryKit - Main convenience header
- *
- * Include this single header to access all TelemetryKit functionality.
- *
- * Example Usage:
- *
- *   #include <telemetrykit/TelemetryKit.h>
- *
- *   using namespace telemetrykit;
- *
- *   void RobotInit() {
- *     auto& logger = Logger::GetInstance();
- *     logger.Start();
- *     logger.AddReceiver(std::make_unique<WPILogWriter>("/logs"));
- *   }
- *
- *   void RobotPeriodic() {
- *     auto& logger = Logger::GetInstance();
- *     logger.PeriodicBeforeUser();
- *
- *     // Log data
- *     RecordOutput("/Speed", 3.5);
- *     RecordOutput("/Pose", pose);
- *
- *     logger.PeriodicAfterUser();
- *   }
- */
-
 // Core components
-#include "telemetrykit/LogValue.h"
-#include "telemetrykit/LogTable.h"
-#include "telemetrykit/Logger.h"
-
-// IO Interface pattern
-#include "telemetrykit/LoggableInputs.h"
+#include "telemetrykit/core/LogValue.h"
+#include "telemetrykit/core/LogTable.h"
+#include "telemetrykit/core/Logger.h"
+#include "telemetrykit/core/LoggableInputs.h"
+#include "telemetrykit/core/StructLogger.h"
 
 // Receivers
-#include "telemetrykit/LogDataReceiver.h"
-#include "telemetrykit/WPILogWriter.h"
-// #include "telemetrykit/NT4Publisher.h"  // TODO: Implement in Phase 5
+#include "telemetrykit/receiver/LogDataReceiver.h"
+#include "telemetrykit/receiver/WPILogWriter.h"
+#include "telemetrykit/receiver/NetworkTablesReceiver.h"
+#include "telemetrykit/receiver/ConsoleReceiver.h"
