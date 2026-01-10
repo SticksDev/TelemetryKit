@@ -8,7 +8,7 @@
 #include "telemetrykit/receiver/LogDataReceiver.h"
 #include "telemetrykit/core/LogValue.h"
 
-namespace telemetrykit {
+namespace tkit {
 
 /**
  * ConsoleReceiver - Prints telemetry data to the console for debugging.
@@ -55,4 +55,4 @@ class ConsoleReceiver : public LogDataReceiver {
   std::ostream& m_output;
 };
 
-}  // namespace telemetrykit
+}  // namespace tkit

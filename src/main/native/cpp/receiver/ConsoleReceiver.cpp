@@ -5,7 +5,7 @@
 
 #include "telemetrykit/core/LogTable.h"
 
-namespace telemetrykit {
+namespace tkit {
 
 ConsoleReceiver::ConsoleReceiver(std::string_view prefix, bool printOnlyChanges)
   : m_prefix(prefix), m_printOnlyChanges(printOnlyChanges), m_output(std::cout) {}
@@ -176,4 +176,4 @@ std::string ConsoleReceiver::FormatValue(const LogValue& value) const {
   return ss.str();
 }
 
-}  // namespace telemetrykit
+}  // namespace tkit

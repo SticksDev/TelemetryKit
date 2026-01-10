@@ -12,7 +12,7 @@
 #include "telemetrykit/core/StructLogger.h"
 #include "telemetrykit/core/LogTable.h"
 
-using namespace telemetrykit;
+using namespace tkit;
 using namespace units::literals;
 
 // Test Pose2d decomposition

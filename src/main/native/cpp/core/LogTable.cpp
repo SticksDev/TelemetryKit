@@ -2,7 +2,7 @@
 
 #include <mutex>
 
-namespace telemetrykit {
+namespace tkit {
 
 LogTable::LogTable()
   : m_prefix(""),
@@ -176,4 +176,4 @@ std::string LogTable::NormalizePrefix(std::string_view prefix) {
   return normalized;
 }
 
-}  // namespace telemetrykit
+}  // namespace tkit

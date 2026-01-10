@@ -9,7 +9,7 @@
 
 #include "telemetrykit/core/LogValue.h"
 
-namespace telemetrykit {
+namespace tkit {
 
 /**
  * LogTable - Flat key-value storage with hierarchical "/" prefixes.
@@ -151,4 +151,4 @@ class LogTable {
   mutable std::shared_ptr<std::shared_mutex> m_mutex;
 };
 
-}  // namespace telemetrykit
+}  // namespace tkit

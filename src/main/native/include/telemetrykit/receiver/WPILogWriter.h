@@ -10,7 +10,7 @@
 #include "telemetrykit/receiver/LogDataReceiver.h"
 #include "telemetrykit/core/LogValue.h"
 
-namespace telemetrykit {
+namespace tkit {
 
 /**
  * WPILogWriter - Writes telemetry data to WPILOG files.
@@ -72,4 +72,4 @@ class WPILogWriter : public LogDataReceiver {
   std::unordered_map<std::string, LogValue> m_lastValues;  // For change detection
 };
 
-}  // namespace telemetrykit
+}  // namespace tkit

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace telemetrykit {
+namespace tkit {
 
 // Forward declaration
 class LogTable;
@@ -30,4 +30,4 @@ class LoggableInputs {
   virtual void FromLog(const LogTable& table) {}
 };
 
-}  // namespace telemetrykit
+}  // namespace tkit

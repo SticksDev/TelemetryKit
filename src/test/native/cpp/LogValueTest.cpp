@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "telemetrykit/core/LogValue.h"
 
-using namespace telemetrykit;
+using namespace tkit;
 
 // Test primitive types
 TEST(LogValueTest, BooleanValue) {

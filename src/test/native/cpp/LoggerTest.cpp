@@ -3,7 +3,7 @@
 #include "telemetrykit/receiver/LogDataReceiver.h"
 #include "telemetrykit/core/LoggableInputs.h"
 
-using namespace telemetrykit;
+using namespace tkit;
 
 // Mock receiver for testing
 class MockReceiver : public LogDataReceiver {
@@ -137,7 +137,7 @@ TEST_F(LoggerTest, RecordOutputConvenience) {
   auto& logger = Logger::GetInstance();
 
   // Test convenience function
-  telemetrykit::RecordOutput("/Test", 42);
+  tkit::RecordOutput("/Test", 42);
 
   auto& table = logger.GetRootTable();
   auto value = table.Get("/Test");
@@ -146,7 +146,7 @@ TEST_F(LoggerTest, RecordOutputConvenience) {
 }
 
 // Periodic updates
-TEST_F(LoggerTest, PeriodicAfterUserCallsReceivers) {
+TEST_F(LoggerTest, PeriodicCallsReceivers) {
   auto& logger = Logger::GetInstance();
 
   auto mockReceiver = std::make_unique<MockReceiver>();
@@ -156,7 +156,7 @@ TEST_F(LoggerTest, PeriodicAfterUserCallsReceivers) {
   logger.Start();
 
   logger.RecordOutput("/Speed", 3.5);
-  logger.PeriodicAfterUser();
+  logger.Periodic();
 
   EXPECT_EQ(mockPtr->updateCount, 1);
   EXPECT_GT(mockPtr->lastTimestamp, 0);
@@ -176,9 +176,9 @@ TEST_F(LoggerTest, MultiplePeriodicCalls) {
   logger.AddReceiver(std::move(mockReceiver));
   logger.Start();
 
-  logger.PeriodicAfterUser();
-  logger.PeriodicAfterUser();
-  logger.PeriodicAfterUser();
+  logger.Periodic();
+  logger.Periodic();
+  logger.Periodic();
 
   EXPECT_EQ(mockPtr->updateCount, 3);
 
@@ -241,8 +241,8 @@ TEST_F(LoggerTest, ReceiverLifecycle) {
   EXPECT_EQ(mockPtr->startCount, 1);
 
   // Periodic updates
-  logger.PeriodicAfterUser();
-  logger.PeriodicAfterUser();
+  logger.Periodic();
+  logger.Periodic();
   EXPECT_EQ(mockPtr->updateCount, 2);
 
   // End logging
@@ -267,7 +267,7 @@ TEST_F(LoggerTest, MultipleReceivers) {
   EXPECT_EQ(mockPtr1->startCount, 1);
   EXPECT_EQ(mockPtr2->startCount, 1);
 
-  logger.PeriodicAfterUser();
+  logger.Periodic();
 
   EXPECT_EQ(mockPtr1->updateCount, 1);
   EXPECT_EQ(mockPtr2->updateCount, 1);

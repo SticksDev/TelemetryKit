@@ -5,7 +5,7 @@
 #include "telemetrykit/receiver/LogDataReceiver.h"
 #include "telemetrykit/core/LoggableInputs.h"
 
-namespace telemetrykit {
+namespace tkit {
 
 // Returns the current logger instance as a singleton (thread-safe). 
 // If the instance does not exist, it is created.
@@ -31,12 +31,7 @@ void Logger::Start() {
   m_isLogging = true;
 }
 
-void Logger::PeriodicBeforeUser() {
-  // Currently a placeholder
-  // In the future, this is where replay data would be injected
-}
-
-void Logger::PeriodicAfterUser() {
+void Logger::Periodic() {
   std::lock_guard<std::mutex> lock(m_mutex);
 
   if (!m_isLogging) {
@@ -100,4 +95,4 @@ int64_t Logger::GetTimestampUs() {
   return frc::RobotController::GetFPGATime();
 }
 
-}  // namespace telemetrykit
+}  // namespace tkit

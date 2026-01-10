@@ -12,7 +12,7 @@
 #include "telemetrykit/core/LogTable.h"
 #include "telemetrykit/core/LogValue.h"
 
-namespace telemetrykit {
+namespace tkit {
 
 /**
  * Helper functions to log WPILib structs with field decomposition.
@@ -124,4 +124,4 @@ inline void LogSwerveModulePositions(LogTable& table, std::string_view key,
   }
 }
 
-}  // namespace telemetrykit
+}  // namespace tkit

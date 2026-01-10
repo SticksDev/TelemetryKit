@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace telemetrykit {
+namespace tkit {
 
 // Forward declaration
 class LogTable;
@@ -45,4 +45,4 @@ class LogDataReceiver {
   virtual void OnEnd() = 0;
 };
 
-}  // namespace telemetrykit
+}  // namespace tkit

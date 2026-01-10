@@ -9,7 +9,7 @@
 #include "telemetrykit/core/LogTable.h"
 #include "telemetrykit/core/LogValue.h"
 
-namespace telemetrykit {
+namespace tkit {
 
 // Forward declaration
 class LogDataReceiver;
@@ -40,20 +40,12 @@ class Logger {
   void Start();
 
   /**
-   * Called before user code each periodic cycle.
+   * Update the logger.
    *
-   * Use this for any pre-cycle initialization.
-   * In the future, this is where replay data would be injected.
-   */
-  void PeriodicBeforeUser();
-
-  /**
-   * Called after user code each periodic cycle.
-   *
-   * Sends the current log table to all receivers.
+   * Call this once per periodic cycle to send logged data to all receivers.
    * This is when data is written to files and published to NetworkTables.
    */
-  void PeriodicAfterUser();
+  void Periodic();
 
   /**
    * End logging.
@@ -128,7 +120,7 @@ class Logger {
   /**
    * Add a data receiver (e.g., file writer, NetworkTables publisher).
    *
-   * Receivers will be notified on each PeriodicAfterUser() call.
+   * Receivers will be notified on each Periodic() call.
    *
    * Example:
    *   logger.AddReceiver(std::make_unique<WPILogWriter>("/logs"));
@@ -173,7 +165,7 @@ class Logger {
  * Record an output value (global convenience function).
  *
  * Example:
- *   telemetrykit::RecordOutput("/Speed", 3.5);
+ *   tkit::RecordOutput("/Speed", 3.5);
  */
 template<typename T>
 inline void RecordOutput(std::string_view key, const T& value) {
@@ -188,4 +180,13 @@ inline void ProcessInput(std::string_view key, const T& value) {
   Logger::GetInstance().ProcessInput(key, value);
 }
 
-}  // namespace telemetrykit
+/**
+ * Update the logger (global convenience function).
+ *
+ * Sends logged data to all receivers.
+ */
+inline void Periodic() {
+  Logger::GetInstance().Periodic();
+}
+
+}  // namespace tkit

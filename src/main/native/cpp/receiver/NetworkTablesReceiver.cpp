@@ -2,7 +2,7 @@
 
 #include "telemetrykit/core/LogTable.h"
 
-namespace telemetrykit {
+namespace tkit {
 
 NetworkTablesReceiver::NetworkTablesReceiver()
   : m_inst(nt::NetworkTableInstance::GetDefault()) {}
@@ -197,4 +197,4 @@ void NetworkTablesReceiver::PublishValue(std::string_view key, const LogValue& v
   }
 }
 
-}  // namespace telemetrykit
+}  // namespace tkit

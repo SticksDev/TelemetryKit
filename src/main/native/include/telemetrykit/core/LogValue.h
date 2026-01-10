@@ -11,7 +11,7 @@
 
 #include <wpi/struct/Struct.h>
 
-namespace telemetrykit {
+namespace tkit {
 
 /**
  * Enum representing the runtime type of a LogValue.
@@ -249,4 +249,4 @@ LogValue MakeStructArrayValue(std::span<const T> structArray) {
   return LogValue(buffer, std::string(descriptor.GetTypeName()), schemaBytes, allSchemas, true);
 }
 
-}  // namespace telemetrykit
+}  // namespace tkit

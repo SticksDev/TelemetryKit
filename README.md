@@ -1,31 +1,70 @@
-# WPILib Vendor Template
+# TelemetryKit
 
-This is the base WPILib vendor template for 2025.
+A lightweight, type-safe telemetry library for FRC robots. TelemetryKit provides a unified interface for logging data to NetworkTables, `.wpilog` files, and console output.
 
-## Layout
+**[📚 Documentation](https://sticksdev.github.io/TelemetryKit/)**
 
-The build is split into 3 libraries. A java library is built. This has access to all of wpilib, and also can JNI load the driver library.
+## Features
 
-A driver library is built. This should contain all low level code you want to access from both C++, Java and any other text based language. This will not work with LabVIEW. This library has access to the WPILib HAL and wpiutil. This library can only export C symbols. It cannot export C++ symbols at all, and all C symbols must be explicitly listed in the symbols.txt file in the driver folder. JNI symbols must be listed in this file as well. This library however can be written in C++. If you attempt to change this library to have access to all of wpilib, you will break JNI access and it will no longer work.
+- **Type-safe logging** - Support for primitives, arrays, and WPILib structs
+- **Multiple receivers** - Publish to NetworkTables, write to `.wpilog` files, or print to console
+- **Change-only optimization** - Only process values when they change
+- **Zero overhead** - Singleton pattern with minimal runtime cost
 
-A native C++ library is built. This has access to all of wpilib, and access to the driver library. This should implment the standard wpilib interfaces.
+## Installation
 
-## Customizing
-For Java, the library name will be the folder name the build is started from, so rename the folder to the name of your choosing. 
+### Using Vendor JSON (Recommended)
 
-For the native impl, you need to change the library name in the exportsConfigs block of build.gradle, the components block of build.gradle, and the taskList input array name in publish.gradle.
+1. Open VS Code with your FRC project
+2. Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac)
+3. Type "WPILib: Manage Vendor Libraries"
+4. Select "Install new libraries (online)"
+5. Paste this URL:
 
-For the driver, change the library name in privateExportsConfigs, the driver name in components, and the driverTaskList input array name. In addition, you'll need to change the `lib library` in the native C++ impl component, and the JNI library name in the JNI java class.
+```
+https://raw.githubusercontent.com/SticksDev/TelemetryKit/refs/heads/2026/TelemetryKit.json
+```
 
-For the maven artifact names, those are all in publish.gradle about 40 lines down.
+## Quick Start
 
-## Building and editing
-This uses gradle, and uses the same base setup as a standard GradleRIO robot project. This means you build with `./gradlew build`, and can install the native toolchain with `./gradlew installRoboRIOToolchain`. If you open this project in VS Code with the wpilib extension installed, you will get intellisense set up for both C++ and Java.
+```cpp
+#include <telemetrykit/TelemetryKit.h>
 
-By default, this template builds against the latest WPILib development build. To build against the last WPILib tagged release, build with `./gradlew build -PreleaseMode`.
+auto& logger = tkit::Logger::GetInstance();
 
-## Checking Vendordep
-After you've published your library to maven, you can use the [vendordep checker](https://github.com/wpilibsuite/vendor-json-repo/blob/main/check.py) to check for common errors, such as not publishing all dependencies, and ensuring that all architectures are correct.
+// Add receivers
+logger.AddReceiver(std::make_unique<tkit::NetworkTablesReceiver>());
+logger.AddReceiver(std::make_unique<tkit::WPILogWriter>("/home/lvuser/logs"));
 
-## Listing Vendordep in VS Code Dependency Manager
-Follow the directions at [WPILib Vendor JSON Repository](https://github.com/wpilibsuite/vendor-json-repo/blob/main/README.md) to get a Vendordep included in the [VS Code Dependency Manager](https://docs.wpilib.org/en/stable/docs/software/vscode-overview/3rd-party-libraries.html#installing-libraries)
+// Start logging
+logger.Start();
+
+// Log data every cycle
+void RobotPeriodic() {
+  tkit::RecordOutput("Drive/Speed", m_drive.GetSpeed());
+  tkit::RecordOutput("Vision/Targets", targetCount);
+  logger.Periodic();
+}
+```
+
+## Building from Source
+
+```bash
+./gradlew build
+```
+
+To install the native toolchain:
+
+```bash
+./gradlew installRoboRIOToolchain
+```
+
+To publish to local WPILib maven:
+
+```bash
+./gradlew copyToWpilibLocal
+```
+
+## License
+
+See [LICENSE.txt](LICENSE.txt)

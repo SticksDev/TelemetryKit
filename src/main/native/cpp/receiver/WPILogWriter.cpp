@@ -7,7 +7,7 @@
 
 #include "telemetrykit/core/LogTable.h"
 
-namespace telemetrykit {
+namespace tkit {
 
 WPILogWriter::WPILogWriter(std::string_view logPath)
   : m_logPath(logPath) {}
@@ -207,4 +207,4 @@ std::string WPILogWriter::GenerateLogFileName() const {
   return ss.str();
 }
 
-}  // namespace telemetrykit
+}  // namespace tkit

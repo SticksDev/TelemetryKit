@@ -2,7 +2,7 @@
 #include <thread>
 #include "telemetrykit/core/LogTable.h"
 
-using namespace telemetrykit;
+using namespace tkit;
 
 // Basic operations
 TEST(LogTableTest, PutAndGet) {

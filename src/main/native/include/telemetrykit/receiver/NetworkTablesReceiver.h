@@ -23,7 +23,7 @@
 #include "telemetrykit/receiver/LogDataReceiver.h"
 #include "telemetrykit/core/LogValue.h"
 
-namespace telemetrykit {
+namespace tkit {
 
 /**
  * NetworkTablesReceiver - Publishes telemetry data to NetworkTables 4.
@@ -91,4 +91,4 @@ class NetworkTablesReceiver : public LogDataReceiver {
   std::unordered_set<std::string> m_publishedSchemas;  // Track published schemas to avoid duplicates
 };
 
-}  // namespace telemetrykit
+}  // namespace tkit

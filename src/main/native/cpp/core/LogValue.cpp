@@ -1,6 +1,6 @@
 #include "telemetrykit/core/LogValue.h"
 
-namespace telemetrykit {
+namespace tkit {
 
 // Default constructor
 LogValue::LogValue()
@@ -147,4 +147,4 @@ bool LogValue::operator==(const LogValue& other) const {
   return m_value == other.m_value;
 }
 
-}  // namespace telemetrykit
+}  // namespace tkit
