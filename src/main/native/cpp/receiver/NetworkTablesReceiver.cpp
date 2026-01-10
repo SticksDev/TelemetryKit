@@ -176,12 +176,14 @@ void NetworkTablesReceiver::PublishValue(std::string_view key, const LogValue& v
       if (pubIt == m_publishers.end()) {
         std::string typeStr = value.GetTypeString();  // e.g., "Pose2d", "SwerveModuleState"
 
-        // Publish struct schema to NetworkTables if we have it
-        auto schema = value.GetSchema();
-        if (!schema.empty()) {
-          // Use "struct:TypeName" format for schema registration
-          std::string fullTypeStr = "struct:" + typeStr;
-          m_inst.AddSchema(typeStr, fullTypeStr, schema);
+        // Publish all struct schemas (including nested ones like Translation2d in Pose2d)
+        const auto& allSchemas = value.GetAllSchemas();
+        for (const auto& [schemaName, schemaBytes] : allSchemas) {
+          // Only publish each schema once
+          if (m_publishedSchemas.find(schemaName) == m_publishedSchemas.end()) {
+            m_inst.AddSchema(schemaName, "structschema", schemaBytes);
+            m_publishedSchemas.insert(schemaName);
+          }
         }
 
         // Create RawTopic publisher with type string

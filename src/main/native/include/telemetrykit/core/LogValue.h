@@ -5,6 +5,7 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 
@@ -81,12 +82,23 @@ class LogValue {
   LogValue(const std::vector<uint8_t>& data, std::string_view typeString,
            std::span<const uint8_t> schema);
 
+  // Constructor for struct data with all schemas (including nested)
+  LogValue(const std::vector<uint8_t>& data, std::string_view typeString,
+           std::span<const uint8_t> schema,
+           const std::unordered_map<std::string, std::vector<uint8_t>>& nestedSchemas);
+
   // Constructor for struct arrays
   LogValue(const std::vector<uint8_t>& data, std::string_view typeString, bool isArray);
 
   // Constructor for struct arrays with schema
   LogValue(const std::vector<uint8_t>& data, std::string_view typeString,
            std::span<const uint8_t> schema, bool isArray);
+
+  // Constructor for struct arrays with all schemas (including nested)
+  LogValue(const std::vector<uint8_t>& data, std::string_view typeString,
+           std::span<const uint8_t> schema,
+           const std::unordered_map<std::string, std::vector<uint8_t>>& nestedSchemas,
+           bool isArray);
 
   // Constructor for raw binary data (no default parameter to avoid ambiguity)
   LogValue(const std::vector<uint8_t>& value, bool isStruct);
@@ -162,6 +174,7 @@ class LogValue {
   ValueVariant m_value;
   std::string m_typeString;  // For struct types (e.g., "Pose2d")
   std::vector<uint8_t> m_schema;  // For struct schema bytes (NT4 schema publishing)
+  std::unordered_map<std::string, std::vector<uint8_t>> m_nestedSchemas;  // Nested struct schemas
 
  public:
   /**
@@ -169,6 +182,14 @@ class LogValue {
    * Returns empty span for non-struct types.
    */
   std::span<const uint8_t> GetSchema() const { return m_schema; }
+
+  /**
+   * Get all nested schemas (including the main schema).
+   * Returns map of typeName -> schema bytes.
+   */
+  const std::unordered_map<std::string, std::vector<uint8_t>>& GetAllSchemas() const {
+    return m_nestedSchemas;
+  }
 };
 
 /**
@@ -190,8 +211,14 @@ LogValue MakeStructValue(const T& structValue) {
   // Get schema bytes
   auto schemaBytes = wpi::GetStructSchemaBytes<T>();
 
-  // Create LogValue with type string and schema
-  return LogValue(buffer, std::string(descriptor.GetTypeName()), schemaBytes);
+  // Collect all schemas (including nested structs like Translation2d in Pose2d)
+  std::unordered_map<std::string, std::vector<uint8_t>> allSchemas;
+  wpi::ForEachStructSchema<T>([&allSchemas](std::string_view name, std::string_view schema) {
+    allSchemas[std::string(name)] = std::vector<uint8_t>(schema.begin(), schema.end());
+  });
+
+  // Create LogValue with type string, schema, and all nested schemas
+  return LogValue(buffer, std::string(descriptor.GetTypeName()), schemaBytes, allSchemas);
 }
 
 /**
@@ -212,8 +239,14 @@ LogValue MakeStructArrayValue(std::span<const T> structArray) {
   // Get schema bytes
   auto schemaBytes = wpi::GetStructSchemaBytes<T>();
 
-  // Create LogValue with type string, schema, and array flag
-  return LogValue(buffer, std::string(descriptor.GetTypeName()), schemaBytes, true);
+  // Collect all schemas (including nested structs)
+  std::unordered_map<std::string, std::vector<uint8_t>> allSchemas;
+  wpi::ForEachStructSchema<T>([&allSchemas](std::string_view name, std::string_view schema) {
+    allSchemas[std::string(name)] = std::vector<uint8_t>(schema.begin(), schema.end());
+  });
+
+  // Create LogValue with type string, schema, all nested schemas, and array flag
+  return LogValue(buffer, std::string(descriptor.GetTypeName()), schemaBytes, allSchemas, true);
 }
 
 }  // namespace telemetrykit

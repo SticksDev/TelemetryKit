@@ -64,6 +64,13 @@ LogValue::LogValue(const std::vector<uint8_t>& data, std::string_view typeString
   : m_type(LogType::kStruct), m_value(data), m_typeString(typeString),
     m_schema(schema.begin(), schema.end()) {}
 
+// Struct constructor with all schemas (including nested)
+LogValue::LogValue(const std::vector<uint8_t>& data, std::string_view typeString,
+                   std::span<const uint8_t> schema,
+                   const std::unordered_map<std::string, std::vector<uint8_t>>& nestedSchemas)
+  : m_type(LogType::kStruct), m_value(data), m_typeString(typeString),
+    m_schema(schema.begin(), schema.end()), m_nestedSchemas(nestedSchemas) {}
+
 // Struct array constructor
 LogValue::LogValue(const std::vector<uint8_t>& data, std::string_view typeString, bool isArray)
   : m_type(isArray ? LogType::kStructArray : LogType::kStruct),
@@ -77,6 +84,17 @@ LogValue::LogValue(const std::vector<uint8_t>& data, std::string_view typeString
     m_value(data),
     m_typeString(typeString),
     m_schema(schema.begin(), schema.end()) {}
+
+// Struct array constructor with all schemas (including nested)
+LogValue::LogValue(const std::vector<uint8_t>& data, std::string_view typeString,
+                   std::span<const uint8_t> schema,
+                   const std::unordered_map<std::string, std::vector<uint8_t>>& nestedSchemas,
+                   bool isArray)
+  : m_type(isArray ? LogType::kStructArray : LogType::kStruct),
+    m_value(data),
+    m_typeString(typeString),
+    m_schema(schema.begin(), schema.end()),
+    m_nestedSchemas(nestedSchemas) {}
 
 std::string LogValue::GetTypeString() const {
   // For structs, return the custom type string

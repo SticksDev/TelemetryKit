@@ -4,6 +4,7 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <unordered_set>
 #include <variant>
 
 #include <networktables/BooleanArrayTopic.h>
@@ -87,6 +88,7 @@ class NetworkTablesReceiver : public LogDataReceiver {
   nt::NetworkTableInstance m_inst;
   std::unordered_map<std::string, PublisherVariant> m_publishers;
   std::unordered_map<std::string, LogValue> m_lastValues;  // For change detection
+  std::unordered_set<std::string> m_publishedSchemas;  // Track published schemas to avoid duplicates
 };
 
 }  // namespace telemetrykit
