@@ -92,22 +92,19 @@ jobs:
           name: ${{ matrix.artifact-name }}
           path: build/allOutputs
 
-  publish-to-r2:
-    name: Publish to R2
+  combine:
+    name: Combine Artifacts
     needs: [build-docker, build-host]
     runs-on: ubuntu-22.04
-    environment: main
     steps:
       - uses: actions/checkout@v4
+        with:
+          repository: wpilibsuite/build-tools
       - uses: actions/download-artifact@v4
         with:
-          path: build/allOutputs
+          path: combiner/products/build/allOutputs
       - name: Flatten Artifacts
-        run: |
-          mkdir -p build/allOutputs-flat
-          rsync -a build/allOutputs/*/* build/allOutputs-flat/
-          rm -rf build/allOutputs
-          mv build/allOutputs-flat build/allOutputs
+        run: rsync -a --delete combiner/products/build/allOutputs/*/* combiner/products/build/allOutputs/
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -116,8 +113,24 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           cache-read-only: false
-      - name: Publish Maven Repository
-        run: ./gradlew publish
+      - name: Combine
+        run: ./gradlew publish -Pthirdparty
+        working-directory: combiner
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Maven
+          path: ~/releases
+
+  publish-to-r2:
+    name: Publish to R2
+    needs: [combine]
+    runs-on: ubuntu-22.04
+    environment: main
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Maven
+          path: maven-repo
       - name: Deploy to R2
         uses: ryand56/r2-upload-action@latest
         with:
@@ -125,7 +138,7 @@ jobs:
           r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
           r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           r2-bucket: ${{ secrets.R2_BUCKET_NAME }}
-          source-dir: build/repos/releases
+          source-dir: maven-repo
           destination-dir: ./
       - name: Summary
         run: |
