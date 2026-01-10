@@ -4,9 +4,7 @@
   "version": "1.0.0",
   "frcYear": "2026",
   "uuid": "bf2eaa28-c978-45c9-8b1e-206f7620bd79",
-  "mavenUrls": [
-    "https://jitpack.io"
-  ],
+  "mavenUrls": [],
   "jsonUrl": "https://raw.githubusercontent.com/SticksDev/TelemetryKit/refs/heads/2026/TelemetryKit.json",
   "jniDependencies": [],
   "javaDependencies": [],

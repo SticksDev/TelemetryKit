@@ -12,8 +12,6 @@ A lightweight, type-safe telemetry library for FRC robots. TelemetryKit provides
 
 ## Installation
 
-### Using Vendor JSON (Recommended)
-
 1. Open VS Code with your FRC project
 2. Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac)
 3. Type "WPILib: Manage Vendor Libraries"

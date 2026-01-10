@@ -171,7 +171,6 @@ publishing {
         maven {
             url = releasesRepoUrl
         }
-        mavenLocal()
     }
 }
 

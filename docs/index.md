@@ -18,8 +18,6 @@ TelemetryKit (`tkit`) is a C++ telemetry framework for FRC robots. It provides s
 
 ### Installation
 
-**Using Vendor JSON (Recommended)**
-
 1. Open VS Code with your FRC project
 2. Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac)
 3. Type "WPILib: Manage Vendor Libraries"
@@ -28,24 +26,6 @@ TelemetryKit (`tkit`) is a C++ telemetry framework for FRC robots. It provides s
 
 ```
 https://raw.githubusercontent.com/SticksDev/TelemetryKit/refs/heads/2026/TelemetryKit.json
-```
-
-**Using Gradle (Alternative)**
-
-Add JitPack repository to your `build.gradle`:
-
-```gradle
-repositories {
-    maven { url 'https://jitpack.io' }
-}
-```
-
-Add the dependency:
-
-```gradle
-dependencies {
-    implementation 'com.github.SticksDev:TelemetryKit:v1.0.0'
-}
 ```
 
 ### Basic Usage
