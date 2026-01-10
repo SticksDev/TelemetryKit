@@ -9,7 +9,6 @@ A lightweight, type-safe telemetry library for FRC robots. TelemetryKit provides
 - **Type-safe logging** - Support for primitives, arrays, and WPILib structs
 - **Multiple receivers** - Publish to NetworkTables, write to `.wpilog` files, or print to console
 - **Change-only optimization** - Only process values when they change
-- **Zero overhead** - Singleton pattern with minimal runtime cost
 
 ## Installation
 
