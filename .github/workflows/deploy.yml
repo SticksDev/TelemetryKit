@@ -43,6 +43,10 @@ jobs:
       - name: Fetch all history and metadata
         run: |
           git config --global --add safe.directory /__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
       - name: Build with Gradle
         run: ./gradlew build ${{ matrix.build-options }}
       - uses: actions/upload-artifact@v4
@@ -77,6 +81,10 @@ jobs:
           distribution: 'temurin'
           java-version: 17
           architecture: ${{ matrix.architecture }}
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
       - name: Build with Gradle
         run: ./gradlew build -Pbuildalldesktop
       - uses: actions/upload-artifact@v4
@@ -104,6 +112,10 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: 17
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
       - name: Publish Maven Repository
         run: ./gradlew publish
       - name: Configure AWS CLI for R2
