@@ -49,10 +49,12 @@ jobs:
           cache-read-only: false
       - name: Build with Gradle
         run: ./gradlew build ${{ matrix.build-options }}
+      - name: Publish to Local Maven
+        run: ./gradlew publish ${{ matrix.build-options }}
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact-name }}
-          path: build/allOutputs
+          name: maven-${{ matrix.artifact-name }}
+          path: build/repos/releases
 
   build-host:
     needs: [validation]
@@ -87,39 +89,30 @@ jobs:
           cache-read-only: false
       - name: Build with Gradle
         run: ./gradlew build -Pbuildalldesktop
+      - name: Publish to Local Maven
+        run: ./gradlew publish -Pbuildalldesktop
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact-name }}
-          path: build/allOutputs
+          name: maven-${{ matrix.artifact-name }}
+          path: build/repos/releases
 
   combine:
-    name: Combine Artifacts
+    name: Combine Maven Repositories
     needs: [build-docker, build-host]
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: wpilibsuite/build-tools
       - uses: actions/download-artifact@v4
         with:
-          path: combiner/products/build/allOutputs
-      - name: Flatten Artifacts
-        run: rsync -a --delete combiner/products/build/allOutputs/*/* combiner/products/build/allOutputs/
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: 17
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          cache-read-only: false
-      - name: Combine
-        run: ./gradlew publish -Pthirdparty
-        working-directory: combiner
+          pattern: maven-*
+          path: maven-artifacts
+      - name: Combine Maven Repositories
+        run: |
+          mkdir -p maven-combined
+          rsync -a maven-artifacts/*/* maven-combined/
       - uses: actions/upload-artifact@v4
         with:
           name: Maven
-          path: ~/releases
+          path: maven-combined
 
   publish-to-r2:
     name: Publish to R2
