@@ -119,15 +119,14 @@ jobs:
       - name: Publish Maven Repository
         run: ./gradlew publish
       - name: Deploy to R2
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: auto
-          AWS_ENDPOINT_URL_S3: ${{ secrets.R2_ENDPOINT_URL }}
-        run: |
-          aws s3 sync build/repos/releases s3://${{ secrets.R2_BUCKET_NAME }} \
-            --cache-control "public, max-age=31536000" \
-            --delete
+        uses: ryand56/r2-upload-action@latest
+        with:
+          r2-account-id: ${{ secrets.R2_ACCOUNT_ID }}
+          r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
+          r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          r2-bucket: ${{ secrets.R2_BUCKET_NAME }}
+          source-dir: build/repos/releases
+          destination-dir: ./
       - name: Summary
         run: |
           echo "Deployed to R2 bucket at $(date)"
