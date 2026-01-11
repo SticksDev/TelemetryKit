@@ -49,9 +49,9 @@ ext.addTaskToCopyAllOutputs = { task ->
 
 def artifactGroupId = 'dev.sticks.telemetrykit'
 def baseArtifactId = 'TelemetryKit'
-def driverZipBaseName = "_GROUP_com_vendor_frc_ID_${baseArtifactId}-driver_CLS"
-def zipBaseName = "_GROUP_com_vendor_frc_ID_${baseArtifactId}-cpp_CLS"
-def javaBaseName = "_GROUP_com_vendor_frc_ID_${baseArtifactId}-java_CLS"
+def driverZipBaseName = "_GROUP_dev_sticks_telemetrykit_ID_${baseArtifactId}-driver_CLS"
+def zipBaseName = "_GROUP_dev_sticks_telemetrykit_ID_${baseArtifactId}-cpp_CLS"
+def javaBaseName = "_GROUP_dev_sticks_telemetrykit_ID_${baseArtifactId}-java_CLS"
 
 task cppHeadersZip(type: Zip) {
     destinationDirectory = outputsFolder
