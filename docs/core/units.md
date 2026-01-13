@@ -148,17 +148,25 @@ TelemetryKit works with any WPILib unit type. See the [WPILib Units Documentatio
 
 ## How It Works
 
-TelemetryKit uses C++ type traits to detect WPILib unit types at compile time via SFINAE. When a unit type is detected:
-
-1. `value.value()` extracts the numeric value
-2. `units::abbreviation(UnitType{})` gets the unit string
-3. Both are passed to the standard logging functions
+TelemetryKit uses a C++20 concept to detect WPILib unit types at compile time:
 
 ```cpp
 template<typename T>
-inline auto RecordOutput(std::string_view key, const T& value)
-    -> std::enable_if_t<detail::is_unit_type_v<T>, void>
-{
+concept UnitType = requires(T t) {
+    { t.value() } -> std::convertible_to<double>;
+    typename T::unit_type;
+};
+```
+
+When a unit type is detected:
+
+1. `value.value()` extracts the numeric value
+2. `units::abbreviation(T{})` gets the unit string
+3. Both are passed to the standard logging functions
+
+```cpp
+template<UnitType T>
+inline void RecordOutput(std::string_view key, const T& value) {
     std::string unit = detail::GetUnitAbbreviation<T>();
     Logger::GetInstance().RecordOutput(key, value.value(), unit);
 }

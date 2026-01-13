@@ -1,8 +1,8 @@
 #pragma once
 
+#include <concepts>
 #include <string>
 #include <string_view>
-#include <type_traits>
 
 #include <units/base.h>
 
@@ -22,25 +22,19 @@ namespace tkit {
  *   tkit::RecordOutput("/Speed", units::meters_per_second_t{2.5});
  */
 
+// Concept for WPILib unit types
+template<typename T>
+concept UnitType = requires(T t) {
+    { t.value() } -> std::convertible_to<double>;
+    typename T::unit_type;
+};
+
 namespace detail {
 
-// Detects whether a type is a WPILib units::unit_t
-template<typename T, typename = void>
-struct is_unit_type : std::false_type {};
-
-template<typename T>
-struct is_unit_type<T, std::void_t<
-    decltype(std::declval<T>().value()),
-    typename T::unit_type
->> : std::true_type {};
-
-template<typename T>
-inline constexpr bool is_unit_type_v = is_unit_type<T>::value;
-
 // Returns the abbreviation string for a unit type
-template<typename UnitType>
+template<UnitType T>
 std::string GetUnitAbbreviation() {
-    return std::string(units::abbreviation(UnitType{}));
+    return std::string(units::abbreviation(T{}));
 }
 
 }  // namespace detail
@@ -54,10 +48,8 @@ std::string GetUnitAbbreviation() {
  *   tkit::RecordOutput("/Distance", units::meter_t{3.5}); // 3.5, "m"
  *   tkit::RecordOutput("/Angle", units::degree_t{90.0});  // 90.0, "deg"
  */
-template<typename T>
-inline auto RecordOutput(std::string_view key, const T& value)
-    -> std::enable_if_t<detail::is_unit_type_v<T>, void>
-{
+template<UnitType T>
+inline void RecordOutput(std::string_view key, const T& value) {
     std::string unit = detail::GetUnitAbbreviation<T>();
     Logger::GetInstance().RecordOutput(key, value.value(), unit);
 }
@@ -65,10 +57,8 @@ inline auto RecordOutput(std::string_view key, const T& value)
 /**
  * LogTable::Put overload for WPILib unit types.
  */
-template<typename T>
-inline auto Put(LogTable& table, std::string_view key, const T& value)
-    -> std::enable_if_t<detail::is_unit_type_v<T>, void>
-{
+template<UnitType T>
+inline void Put(LogTable& table, std::string_view key, const T& value) {
     std::string unit = detail::GetUnitAbbreviation<T>();
     table.Put(key, value.value(), unit);
 }
