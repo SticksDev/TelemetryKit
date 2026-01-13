@@ -206,5 +206,6 @@ tkit::Periodic();
 ## Next Steps
 
 - Learn about [LogValue](logvalue.md) in detail
+- See [Units](units.md) for unit metadata and WPILib units integration
 - Explore [Receivers](../receivers/overview.md) and how to configure them
 - See [Struct Logging](../advanced/structs.md) for working with WPILib structs

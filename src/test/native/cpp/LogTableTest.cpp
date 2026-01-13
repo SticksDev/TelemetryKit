@@ -299,3 +299,134 @@ TEST(LogTableTest, OverwriteValue) {
   // Still only one entry
   EXPECT_EQ(table.Size(), 1u);
 }
+
+// ============================================================================
+// Unit metadata tests
+// ============================================================================
+
+TEST(LogTableTest, PutWithUnit) {
+  LogTable table;
+  table.Put("/Speed", 3.5, "m/s");
+
+  auto value = table.Get("/Speed");
+  ASSERT_TRUE(value.has_value());
+  EXPECT_DOUBLE_EQ(value->Get<double>(), 3.5);
+
+  EXPECT_EQ(table.GetUnit("/Speed"), "m/s");
+}
+
+TEST(LogTableTest, PutWithEmptyUnit) {
+  LogTable table;
+  table.Put("/Count", 42, "");
+
+  auto value = table.Get("/Count");
+  ASSERT_TRUE(value.has_value());
+  EXPECT_EQ(value->Get<int64_t>(), 42);
+
+  // Empty unit should not be stored
+  EXPECT_EQ(table.GetUnit("/Count"), "");
+}
+
+TEST(LogTableTest, GetUnitNonExistent) {
+  LogTable table;
+  table.Put("/Speed", 3.5);  // No unit
+
+  EXPECT_EQ(table.GetUnit("/Speed"), "");
+  EXPECT_EQ(table.GetUnit("/DoesNotExist"), "");
+}
+
+TEST(LogTableTest, GetAllUnits) {
+  LogTable table;
+  table.Put("/Speed", 3.5, "m/s");
+  table.Put("/Angle", 1.57, "radians");
+  table.Put("/Count", 42);  // No unit
+  table.Put("/Voltage", 12.0, "volts");
+
+  auto units = table.GetAllUnits();
+
+  EXPECT_EQ(units.size(), 3u);  // Only 3 have units
+  EXPECT_EQ(units["/Speed"], "m/s");
+  EXPECT_EQ(units["/Angle"], "radians");
+  EXPECT_EQ(units["/Voltage"], "volts");
+  EXPECT_FALSE(units.contains("/Count"));
+}
+
+TEST(LogTableTest, GetAllUnitsSubtable) {
+  LogTable rootTable;
+  rootTable.Put("/Drive/LeftVel", 3.5, "m/s");
+  rootTable.Put("/Drive/RightVel", 3.3, "m/s");
+  rootTable.Put("/Arm/Angle", 1.57, "radians");
+
+  auto driveTable = rootTable.GetSubtable("/Drive");
+  auto units = driveTable.GetAllUnits();
+
+  // Should only get Drive units
+  EXPECT_EQ(units.size(), 2u);
+  EXPECT_EQ(units["/Drive/LeftVel"], "m/s");
+  EXPECT_EQ(units["/Drive/RightVel"], "m/s");
+  EXPECT_FALSE(units.contains("/Arm/Angle"));
+}
+
+TEST(LogTableTest, SubtablePutWithUnit) {
+  LogTable rootTable;
+  auto gyroTable = rootTable.GetSubtable("/Gyro");
+
+  gyroTable.Put("Yaw", 45.0, "degrees");
+  gyroTable.Put("Pitch", 10.0, "degrees");
+  gyroTable.Put("Roll", 5.0);  // No unit
+
+  // Check values
+  EXPECT_TRUE(rootTable.Contains("/Gyro/Yaw"));
+  EXPECT_TRUE(rootTable.Contains("/Gyro/Pitch"));
+  EXPECT_TRUE(rootTable.Contains("/Gyro/Roll"));
+
+  // Check units via root table
+  EXPECT_EQ(rootTable.GetUnit("/Gyro/Yaw"), "degrees");
+  EXPECT_EQ(rootTable.GetUnit("/Gyro/Pitch"), "degrees");
+  EXPECT_EQ(rootTable.GetUnit("/Gyro/Roll"), "");
+}
+
+TEST(LogTableTest, TemplatePutWithUnit) {
+  LogTable table;
+
+  table.Put("/Speed", 3.5, "m/s");
+  table.Put("/Angle", 1.57, "radians");
+  table.Put("/Current", 42.0, "amps");
+
+  EXPECT_DOUBLE_EQ(table.Get("/Speed")->Get<double>(), 3.5);
+  EXPECT_EQ(table.GetUnit("/Speed"), "m/s");
+
+  EXPECT_DOUBLE_EQ(table.Get("/Angle")->Get<double>(), 1.57);
+  EXPECT_EQ(table.GetUnit("/Angle"), "radians");
+
+  EXPECT_DOUBLE_EQ(table.Get("/Current")->Get<double>(), 42.0);
+  EXPECT_EQ(table.GetUnit("/Current"), "amps");
+}
+
+TEST(LogTableTest, OverwriteValuePreservesUnit) {
+  LogTable table;
+  table.Put("/Speed", 3.5, "m/s");
+
+  EXPECT_DOUBLE_EQ(table.Get("/Speed")->Get<double>(), 3.5);
+  EXPECT_EQ(table.GetUnit("/Speed"), "m/s");
+
+  // Overwrite value without unit
+  table.Put("/Speed", 5.0);
+
+  EXPECT_DOUBLE_EQ(table.Get("/Speed")->Get<double>(), 5.0);
+  // Unit should still be preserved
+  EXPECT_EQ(table.GetUnit("/Speed"), "m/s");
+}
+
+TEST(LogTableTest, OverwriteValueWithNewUnit) {
+  LogTable table;
+  table.Put("/Speed", 3.5, "m/s");
+
+  EXPECT_EQ(table.GetUnit("/Speed"), "m/s");
+
+  // Overwrite with new unit
+  table.Put("/Speed", 11.5, "ft/s");
+
+  EXPECT_DOUBLE_EQ(table.Get("/Speed")->Get<double>(), 11.5);
+  EXPECT_EQ(table.GetUnit("/Speed"), "ft/s");
+}

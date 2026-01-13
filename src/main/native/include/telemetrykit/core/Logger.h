@@ -73,9 +73,30 @@ class Logger {
   }
 
   /**
+   * Record an output value with unit metadata.
+   *
+   * Unit metadata is used by AdvantageScope for unit-aware graphing.
+   *
+   * Examples:
+   *   logger.RecordOutput("/Speed", 3.5, "m/s");
+   *   logger.RecordOutput("/Angle", 1.57, "radians");
+   *   logger.RecordOutput("/Current", 42.0, "amps");
+   */
+  template<typename T>
+  void RecordOutput(std::string_view key, const T& value, std::string_view unit) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_rootTable.Put(key, LogValue(value), unit);
+  }
+
+  /**
    * Record an output value (LogValue overload).
    */
   void RecordOutput(std::string_view key, const LogValue& value);
+
+  /**
+   * Record an output value with unit metadata (LogValue overload).
+   */
+  void RecordOutput(std::string_view key, const LogValue& value, std::string_view unit);
 
 
   /**
@@ -170,6 +191,18 @@ class Logger {
 template<typename T>
 inline void RecordOutput(std::string_view key, const T& value) {
   Logger::GetInstance().RecordOutput(key, value);
+}
+
+/**
+ * Record an output value with unit metadata (global convenience function).
+ *
+ * Example:
+ *   tkit::RecordOutput("/Speed", 3.5, "m/s");
+ *   tkit::RecordOutput("/Angle", 1.57, "radians");
+ */
+template<typename T>
+inline void RecordOutput(std::string_view key, const T& value, std::string_view unit) {
+  Logger::GetInstance().RecordOutput(key, value, unit);
 }
 
 /**

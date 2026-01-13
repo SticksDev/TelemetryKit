@@ -67,6 +67,11 @@ void Logger::RecordOutput(std::string_view key, const LogValue& value) {
   m_rootTable.Put(key, value);
 }
 
+void Logger::RecordOutput(std::string_view key, const LogValue& value, std::string_view unit) {
+  std::lock_guard<std::mutex> lock(m_mutex);
+  m_rootTable.Put(key, value, unit);
+}
+
 void Logger::ProcessInputs(std::string_view key, const LoggableInputs& inputs) {
   // Get subtable for this input group
   auto table = GetTable(key);

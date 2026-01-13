@@ -49,6 +49,7 @@ nav = [
   { "Core Concepts" = [
     { "Overview" = "core/overview.md" },
     { "LogValue" = "core/logvalue.md" },
+    { "Units" = "core/units.md" },
     { "Receivers" = "receivers/overview.md" },
   ]},
   { "Advanced" = [

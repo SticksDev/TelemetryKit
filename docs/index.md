@@ -12,6 +12,7 @@ TelemetryKit (`tkit`) is a C++ telemetry framework for FRC robots. It provides s
 - **Type-Safe** - Compile-time type checking with `std::variant` storage
 - **Multiple Receivers** - Log to NT4, WPILog files, and console simultaneously
 - **Struct Support** - WPILib struct serialization with automatic schema publishing
+- **Unit Metadata** - Automatic unit extraction from WPILib units library for AdvantageScope
 - **Field-Change-Only** - Only logs values when they change to reduce overhead
 
 ## Quick Start
@@ -98,6 +99,7 @@ The Logger manages a LogTable (key-value store) and distributes updates to multi
 ## Next Steps
 
 - [Core Concepts](core/overview.md) - Learn about Logger, LogValue, and Receivers
+- [Units](core/units.md) - Unit metadata and WPILib units integration
 - [Receivers](receivers/overview.md) - Configure output destinations
 - [Struct Logging](advanced/structs.md) - Working with WPILib geometry types
 - [Examples](examples/basic.md) - Common usage patterns

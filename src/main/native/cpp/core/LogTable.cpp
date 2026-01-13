@@ -7,17 +7,28 @@ namespace tkit {
 LogTable::LogTable()
   : m_prefix(""),
     m_entries(std::make_shared<std::unordered_map<std::string, LogValue>>()),
+    m_units(std::make_shared<std::unordered_map<std::string, std::string>>()),
     m_mutex(std::make_shared<std::shared_mutex>()) {}
 
 LogTable::LogTable(std::string_view prefix)
   : m_prefix(NormalizePrefix(prefix)),
     m_entries(std::make_shared<std::unordered_map<std::string, LogValue>>()),
+    m_units(std::make_shared<std::unordered_map<std::string, std::string>>()),
     m_mutex(std::make_shared<std::shared_mutex>()) {}
 
 void LogTable::Put(std::string_view key, const LogValue& value) {
   std::string fullKey = BuildKey(key);
   std::unique_lock lock(*m_mutex);
   (*m_entries)[fullKey] = value;
+}
+
+void LogTable::Put(std::string_view key, const LogValue& value, std::string_view unit) {
+  std::string fullKey = BuildKey(key);
+  std::unique_lock lock(*m_mutex);
+  (*m_entries)[fullKey] = value;
+  if (!unit.empty()) {
+    (*m_units)[fullKey] = std::string(unit);
+  }
 }
 
 std::optional<LogValue> LogTable::Get(std::string_view key) const {
@@ -92,6 +103,7 @@ LogTable LogTable::GetSubtable(std::string_view prefix) const {
   LogTable subtable;
   subtable.m_prefix = newPrefix;
   subtable.m_entries = m_entries;  // Share the same storage
+  subtable.m_units = m_units;      // Share the same unit storage
   subtable.m_mutex = m_mutex;      // Share the same mutex
 
   return subtable;
@@ -128,6 +140,35 @@ std::vector<std::string> LogTable::GetKeys() const {
   }
 
   return keys;
+}
+
+std::string LogTable::GetUnit(std::string_view key) const {
+  std::string fullKey = BuildKey(key);
+  std::shared_lock lock(*m_mutex);
+
+  auto it = m_units->find(fullKey);
+  if (it != m_units->end()) {
+    return it->second;
+  }
+  return "";
+}
+
+std::unordered_map<std::string, std::string> LogTable::GetAllUnits() const {
+  std::shared_lock lock(*m_mutex);
+
+  // If we have a prefix, filter units
+  if (!m_prefix.empty()) {
+    std::unordered_map<std::string, std::string> filtered;
+    for (const auto& [key, unit] : *m_units) {
+      if (key.starts_with(m_prefix)) {
+        filtered[key] = unit;
+      }
+    }
+    return filtered;
+  }
+
+  // No prefix, return everything
+  return *m_units;
 }
 
 bool LogTable::HasChanged(std::string_view key, const LogValue& newValue) const {

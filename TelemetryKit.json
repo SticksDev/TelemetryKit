@@ -1,7 +1,7 @@
 {
   "fileName": "TelemetryKit.json",
   "name": "TelemetryKit",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "frcYear": "2026",
   "uuid": "bf2eaa28-c978-45c9-8b1e-206f7620bd79",
   "mavenUrls": [
@@ -14,7 +14,7 @@
     {
       "groupId": "dev.sticks.telemetrykit",
       "artifactId": "TelemetryKit-cpp",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "libName": "TelemetryKit",
       "headerClassifier": "headers",
       "sharedLibrary": false,

@@ -48,9 +48,10 @@ class WPILogWriter : public LogDataReceiver {
    *
    * @param key The log key (e.g., "/Drivetrain/Speed")
    * @param value The value to log
+   * @param unit Unit metadata for AdvantageScope (e.g., "m/s", "radians")
    * @return Entry ID for appending data
    */
-  int GetOrCreateEntry(std::string_view key, const LogValue& value);
+  int GetOrCreateEntry(std::string_view key, const LogValue& value, std::string_view unit = "");
 
   /**
    * Append a value to the DataLog.

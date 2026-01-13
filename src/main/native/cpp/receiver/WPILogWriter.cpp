@@ -34,8 +34,9 @@ void WPILogWriter::OnUpdate(const LogTable& table, int64_t timestamp) {
     return;
   }
 
-  // Get all entries from the table
+  // Get all entries and units from the table
   auto entries = table.GetAllEntries();
+  auto units = table.GetAllUnits();
 
   // Process each entry
   for (const auto& [key, value] : entries) {
@@ -45,8 +46,15 @@ void WPILogWriter::OnUpdate(const LogTable& table, int64_t timestamp) {
       continue;  // No change, skip
     }
 
-    // Get or create entry
-    int entryId = GetOrCreateEntry(key, value);
+    // Get unit metadata for this key (empty string if not set)
+    std::string unit;
+    auto unitIt = units.find(key);
+    if (unitIt != units.end()) {
+      unit = unitIt->second;
+    }
+
+    // Get or create entry with unit metadata
+    int entryId = GetOrCreateEntry(key, value, unit);
 
     // Append value
     AppendValue(entryId, value, timestamp);
@@ -67,7 +75,7 @@ void WPILogWriter::OnEnd() {
   m_lastValues.clear();
 }
 
-int WPILogWriter::GetOrCreateEntry(std::string_view key, const LogValue& value) {
+int WPILogWriter::GetOrCreateEntry(std::string_view key, const LogValue& value, std::string_view unit) {
   // Check if entry already exists
   std::string keyStr(key);
   auto it = m_entryIds.find(keyStr);
@@ -75,53 +83,60 @@ int WPILogWriter::GetOrCreateEntry(std::string_view key, const LogValue& value) 
     return it->second;
   }
 
+  // Build metadata string for unit (AdvantageScope format)
+  // Format: {"unit":"meters"} or empty for no unit
+  std::string metadata;
+  if (!unit.empty()) {
+    metadata = "{\"unit\":\"" + std::string(unit) + "\"}";
+  }
+
   // Create new entry based on type
   int entryId = 0;
 
   switch (value.GetType()) {
     case LogType::kBoolean:
-      entryId = m_log->Start(keyStr, "boolean");
+      entryId = m_log->Start(keyStr, "boolean", metadata);
       break;
     case LogType::kInt64:
-      entryId = m_log->Start(keyStr, "int64");
+      entryId = m_log->Start(keyStr, "int64", metadata);
       break;
     case LogType::kFloat:
-      entryId = m_log->Start(keyStr, "float");
+      entryId = m_log->Start(keyStr, "float", metadata);
       break;
     case LogType::kDouble:
-      entryId = m_log->Start(keyStr, "double");
+      entryId = m_log->Start(keyStr, "double", metadata);
       break;
     case LogType::kString:
-      entryId = m_log->Start(keyStr, "string");
+      entryId = m_log->Start(keyStr, "string", metadata);
       break;
     case LogType::kBooleanArray:
-      entryId = m_log->Start(keyStr, "boolean[]");
+      entryId = m_log->Start(keyStr, "boolean[]", metadata);
       break;
     case LogType::kInt64Array:
-      entryId = m_log->Start(keyStr, "int64[]");
+      entryId = m_log->Start(keyStr, "int64[]", metadata);
       break;
     case LogType::kFloatArray:
-      entryId = m_log->Start(keyStr, "float[]");
+      entryId = m_log->Start(keyStr, "float[]", metadata);
       break;
     case LogType::kDoubleArray:
-      entryId = m_log->Start(keyStr, "double[]");
+      entryId = m_log->Start(keyStr, "double[]", metadata);
       break;
     case LogType::kStringArray:
-      entryId = m_log->Start(keyStr, "string[]");
+      entryId = m_log->Start(keyStr, "string[]", metadata);
       break;
     case LogType::kRaw:
-      entryId = m_log->Start(keyStr, "raw");
+      entryId = m_log->Start(keyStr, "raw", metadata);
       break;
     case LogType::kStruct: {
       // For structs, use "struct:TypeName" format (e.g., "struct:Pose2d")
       std::string typeStr = "struct:" + value.GetTypeString();
-      entryId = m_log->Start(keyStr, typeStr);
+      entryId = m_log->Start(keyStr, typeStr, metadata);
       break;
     }
     case LogType::kStructArray: {
       // For struct arrays, use "struct:TypeName[]" format (e.g., "struct:Pose2d[]")
       std::string typeStr = "struct:" + value.GetTypeString() + "[]";
-      entryId = m_log->Start(keyStr, typeStr);
+      entryId = m_log->Start(keyStr, typeStr, metadata);
       break;
     }
   }

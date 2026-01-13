@@ -18,11 +18,6 @@ namespace tkit {
  * Uses a flat std::unordered_map with "/" separated keys to create a virtual
  * hierarchy (similar to PyKit's approach).
  *
- * Thread Safety:
- *   - Multiple concurrent readers supported
- *   - Single writer at a time
- *   - Uses std::shared_mutex
- *
  * Example:
  *   LogTable table;
  *   table.Put("/Drivetrain/LeftMotor/Velocity", 3.5);
@@ -51,6 +46,14 @@ class LogTable {
   void Put(std::string_view key, const LogValue& value);
 
   /**
+   * Store a LogValue with the given key and unit metadata.
+   *
+   * Unit metadata is used by AdvantageScope for unit-aware graphing.
+   * Common units: "meters", "radians", "m/s", "volts", "amps"
+   */
+  void Put(std::string_view key, const LogValue& value, std::string_view unit);
+
+  /**
    * Template convenience method to store any supported type.
    *
    * Example:
@@ -61,6 +64,18 @@ class LogTable {
   template<typename T>
   void Put(std::string_view key, const T& value) {
     Put(key, LogValue(value));
+  }
+
+  /**
+   * Template convenience method to store a value with unit metadata.
+   *
+   * Example:
+   *   table.Put("/Speed", 3.5, "m/s");
+   *   table.Put("/Angle", 1.57, "radians");
+   */
+  template<typename T>
+  void Put(std::string_view key, const T& value, std::string_view unit) {
+    Put(key, LogValue(value), unit);
   }
 
   /**
@@ -120,6 +135,20 @@ class LogTable {
   std::vector<std::string> GetKeys() const;
 
   /**
+   * Get the unit metadata for a key.
+   *
+   * Returns empty string if no unit is set.
+   */
+  std::string GetUnit(std::string_view key) const;
+
+  /**
+   * Get all unit metadata in the table.
+   *
+   * Returns map of key -> unit string.
+   */
+  std::unordered_map<std::string, std::string> GetAllUnits() const;
+
+  /**
    * Check if a value has changed compared to what's in the table.
    *
    * Useful for change detection in receivers.
@@ -148,6 +177,7 @@ class LogTable {
 
   std::string m_prefix;
   std::shared_ptr<std::unordered_map<std::string, LogValue>> m_entries;
+  std::shared_ptr<std::unordered_map<std::string, std::string>> m_units;  // key -> unit metadata
   mutable std::shared_ptr<std::shared_mutex> m_mutex;
 };
 
