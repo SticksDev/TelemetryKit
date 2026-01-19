@@ -51,6 +51,7 @@ nav = [
     { "LogValue" = "core/logvalue.md" },
     { "Units" = "core/units.md" },
     { "Receivers" = "receivers/overview.md" },
+    { "Alerts" = "core/alerts.md"}
   ]},
   { "Advanced" = [
     { "Struct Logging" = "advanced/structs.md" },

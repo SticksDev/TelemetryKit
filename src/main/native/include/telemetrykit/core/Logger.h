@@ -134,10 +134,18 @@ class Logger {
   Logger(const Logger&) = delete;
   Logger& operator=(const Logger&) = delete;
 
+  /// Checks if Periodic() hasn't been called recently and warns.
+  void CheckPeriodicWarning();
+
   LogTable m_rootTable;
   std::vector<std::unique_ptr<LogDataReceiver>> m_receivers;
   bool m_isLogging{false};
   mutable std::mutex m_mutex;
+
+  // Warning tracking
+  int64_t m_lastPeriodicTime{0};
+  int64_t m_lastWarningTime{0};
+  static constexpr int64_t kPeriodicWarningIntervalUs = 5'000'000;  // 5 seconds
 };
 
 // Free-function wrappers --------------------------------------------------

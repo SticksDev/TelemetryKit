@@ -99,6 +99,7 @@ The Logger manages a LogTable (key-value store) and distributes updates to multi
 ## Next Steps
 
 - [Core Concepts](core/overview.md) - Learn about Logger, LogValue, and Receivers
+- [Alerts](core/alerts.md) - Driver Station alerts and threshold monitoring
 - [Units](core/units.md) - Unit metadata and WPILib units integration
 - [Receivers](receivers/overview.md) - Configure output destinations
 - [Struct Logging](advanced/structs.md) - Working with WPILib geometry types

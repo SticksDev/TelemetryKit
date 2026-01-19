@@ -68,6 +68,8 @@ TEST_F(LoggerTest, StartAndEnd) {
 
   EXPECT_FALSE(logger.IsLogging());
 
+  // Need a receiver to start
+  logger.AddReceiver(std::make_unique<MockReceiver>());
   logger.Start();
   EXPECT_TRUE(logger.IsLogging());
 
@@ -78,6 +80,8 @@ TEST_F(LoggerTest, StartAndEnd) {
 TEST_F(LoggerTest, StartIdempotent) {
   auto& logger = Logger::GetInstance();
 
+  // Need a receiver to start
+  logger.AddReceiver(std::make_unique<MockReceiver>());
   logger.Start();
   EXPECT_TRUE(logger.IsLogging());
 
