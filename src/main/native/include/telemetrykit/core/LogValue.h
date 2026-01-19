@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <span>
@@ -9,12 +10,13 @@
 #include <variant>
 #include <vector>
 
+#include <networktables/NetworkTableInstance.h>
 #include <wpi/struct/Struct.h>
 
 namespace tkit {
 
 /**
- * Enum representing the runtime type of a LogValue.
+ * Runtime tag for LogValue contents.
  */
 enum class LogType {
   kBoolean,
@@ -27,20 +29,20 @@ enum class LogType {
   kFloatArray,
   kDoubleArray,
   kStringArray,
-  kRaw,          // For arbitrary binary data
-  kStruct,       // WPILib structs (Pose2d, etc.)
+  kRaw,          // arbitrary bytes
+  kStruct,       // packed WPILib struct bytes + schema/type name
   kStructArray
 };
 
 /**
- * LogValue - Type-safe value wrapper using std::variant.
+ * A tagged value used by the logging pipeline.
  *
- * Stores values with runtime type information while maintaining compile-time
- * type safety. Supports all WPILOG primitive types, arrays, and WPILib structs.
+ * Backed by a std::variant for the common primitive/array cases. Structs are
+ * stored as packed bytes with an associated type name and schema data.
  */
 class LogValue {
  public:
-  // Variant type holding all possible value types
+  // All supported stored value shapes.
   using ValueVariant = std::variant<
     bool,
     int64_t,
@@ -52,108 +54,82 @@ class LogValue {
     std::vector<float>,
     std::vector<double>,
     std::vector<std::string>,
-    std::vector<uint8_t>  // Raw + struct data
+    std::vector<uint8_t>  // raw + packed struct data
   >;
 
-  // Default constructor (for use in containers)
+  // For containers / default init
   LogValue();
 
-  // Constructors for primitive types
+  // Primitive constructors
   LogValue(bool value);
   LogValue(int64_t value);
-  LogValue(int value);  // Convenience for int
+  LogValue(int value);
   LogValue(float value);
   LogValue(double value);
   LogValue(const std::string& value);
-  LogValue(const char* value);  // Convenience for string literals
+  LogValue(const char* value);
 
-  // Constructors for array types
+  // Array constructors
   LogValue(const std::vector<bool>& value);
   LogValue(const std::vector<int64_t>& value);
-  LogValue(const std::vector<int>& value);  // Convenience
+  LogValue(const std::vector<int>& value);
   LogValue(const std::vector<float>& value);
   LogValue(const std::vector<double>& value);
   LogValue(const std::vector<std::string>& value);
 
-  // Constructor for struct data with type string (MUST come before bool constructor)
+  // Packed struct bytes + type name
+  // (kept separate from raw to avoid overload ambiguity)
   LogValue(const std::vector<uint8_t>& data, std::string_view typeString);
 
-  // Constructor for struct data with type string and schema
+  // Struct bytes + type + schema
   LogValue(const std::vector<uint8_t>& data, std::string_view typeString,
            std::span<const uint8_t> schema);
 
-  // Constructor for struct data with all schemas (including nested)
+  // Struct bytes + type + schema + any nested schemas
   LogValue(const std::vector<uint8_t>& data, std::string_view typeString,
            std::span<const uint8_t> schema,
            const std::unordered_map<std::string, std::vector<uint8_t>>& nestedSchemas);
 
-  // Constructor for struct arrays
+  // Struct array variants
   LogValue(const std::vector<uint8_t>& data, std::string_view typeString, bool isArray);
-
-  // Constructor for struct arrays with schema
   LogValue(const std::vector<uint8_t>& data, std::string_view typeString,
            std::span<const uint8_t> schema, bool isArray);
-
-  // Constructor for struct arrays with all schemas (including nested)
   LogValue(const std::vector<uint8_t>& data, std::string_view typeString,
            std::span<const uint8_t> schema,
            const std::unordered_map<std::string, std::vector<uint8_t>>& nestedSchemas,
            bool isArray);
 
-  // Constructor for raw binary data (no default parameter to avoid ambiguity)
+  // Raw bytes (not a struct)
   LogValue(const std::vector<uint8_t>& value, bool isStruct);
 
-  // Copy and move
+  // Copy/move
   LogValue(const LogValue& other) = default;
   LogValue(LogValue&& other) = default;
   LogValue& operator=(const LogValue& other) = default;
   LogValue& operator=(LogValue&& other) = default;
 
-  /**
-   * Get the runtime type of this value.
-   */
+  /// Type tag.
   LogType GetType() const { return m_type; }
 
-  /**
-   * Get the type string for WPILOG/NT4.
-   * Returns the LogType name for primitives, or custom type string for structs.
-   */
+  /// WPILOG/NT type string (primitive name or struct type name).
   std::string GetTypeString() const;
 
-  /**
-   * Get the underlying variant value.
-   */
+  /// Underlying stored value.
   const ValueVariant& GetValue() const { return m_value; }
 
-  /**
-   * Check if this LogValue holds a specific type T.
-   *
-   * Example:
-   *   if (value.Is<double>()) { ... }
-   */
+  /// True if the variant currently holds T.
   template<typename T>
   bool Is() const {
     return std::holds_alternative<T>(m_value);
   }
 
-  /**
-   * Get the value as type T.
-   * Throws std::bad_variant_access if type doesn't match.
-   *
-   * Example:
-   *   double d = value.Get<double>();
-   */
+  /// Returns the stored T (throws if wrong type).
   template<typename T>
   const T& Get() const {
     return std::get<T>(m_value);
   }
 
-  /**
-   * Get the value as type T, or return a default if type doesn't match.
-   *
-   * Example:
-   *   double d = value.GetOr<double>(0.0);
-   */
+  /// Returns stored T or a default if the type doesn't match.
   template<typename T>
   T GetOr(const T& defaultValue) const {
     try {
@@ -163,90 +139,112 @@ class LogValue {
     }
   }
 
-  /**
-   * Equality comparison.
-   */
   bool operator==(const LogValue& other) const;
   bool operator!=(const LogValue& other) const { return !(*this == other); }
 
  private:
   LogType m_type;
   ValueVariant m_value;
-  std::string m_typeString;  // For struct types (e.g., "Pose2d")
-  std::vector<uint8_t> m_schema;  // For struct schema bytes (NT4 schema publishing)
-  std::unordered_map<std::string, std::vector<uint8_t>> m_nestedSchemas;  // Nested struct schemas
+
+  // Struct metadata
+  std::string m_typeString;
+  std::vector<uint8_t> m_schema;
+  std::unordered_map<std::string, std::vector<uint8_t>> m_nestedSchemas;
+
+  // Type-erased schema registration function (captures T at construction)
+  using SchemaRegistrar = std::function<void(nt::NetworkTableInstance&)>;
+  SchemaRegistrar m_schemaRegistrar;
 
  public:
-  /**
-   * Get the schema bytes for struct types.
-   * Returns empty span for non-struct types.
-   */
+  /// Schema bytes for struct types (empty for non-struct).
   std::span<const uint8_t> GetSchema() const { return m_schema; }
 
-  /**
-   * Get all nested schemas (including the main schema).
-   * Returns map of typeName -> schema bytes.
-   */
+  /// Map of type name -> schema bytes (includes nested structs).
   const std::unordered_map<std::string, std::vector<uint8_t>>& GetAllSchemas() const {
     return m_nestedSchemas;
+  }
+
+  /// Registers struct schema with NetworkTables (call once per type).
+  void RegisterSchema(nt::NetworkTableInstance& inst) const {
+    if (m_schemaRegistrar) {
+      m_schemaRegistrar(inst);
+    }
+  }
+
+  /// Returns true if this value has a schema registrar.
+  bool HasSchemaRegistrar() const { return static_cast<bool>(m_schemaRegistrar); }
+
+  /// Sets the schema registrar (used by MakeStructValue/MakeStructArrayValue).
+  void SetSchemaRegistrar(SchemaRegistrar registrar) {
+    m_schemaRegistrar = std::move(registrar);
   }
 };
 
 /**
- * Helper function to create a LogValue from a WPILib struct.
- *
- * Example:
- *   frc::Pose2d pose{...};
- *   LogValue value = MakeStructValue(pose);
+ * Packs a WPILib struct into a LogValue (bytes + type name + schema info).
  */
-template<typename T>
+template<wpi::StructSerializable T>
 LogValue MakeStructValue(const T& structValue) {
-  // Get the struct descriptor (all WPILib structs have a static 'struct' member)
-  auto& descriptor = T::struct_type;
+  using S = wpi::Struct<typename std::remove_cvref_t<T>>;
 
-  // Serialize to bytes
-  std::vector<uint8_t> buffer(descriptor.GetSize());
-  descriptor.Pack(buffer, structValue);
+  std::vector<uint8_t> buffer(S::GetSize());
+  S::Pack(buffer, structValue);
 
-  // Get schema bytes
   auto schemaBytes = wpi::GetStructSchemaBytes<T>();
 
-  // Collect all schemas (including nested structs like Translation2d in Pose2d)
   std::unordered_map<std::string, std::vector<uint8_t>> allSchemas;
   wpi::ForEachStructSchema<T>([&allSchemas](std::string_view name, std::string_view schema) {
     allSchemas[std::string(name)] = std::vector<uint8_t>(schema.begin(), schema.end());
   });
 
-  // Create LogValue with type string, schema, and all nested schemas
-  return LogValue(buffer, std::string(descriptor.GetTypeName()), schemaBytes, allSchemas);
+  // Use struct: prefixed type string for NT4
+  std::string typeString = wpi::GetStructTypeString<T>();
+
+  LogValue value(buffer, typeString, schemaBytes, allSchemas);
+  value.SetSchemaRegistrar([](nt::NetworkTableInstance& inst) {
+    inst.AddStructSchema<T>();
+  });
+  
+  return value;
 }
 
 /**
- * Helper function to create a LogValue from an array of WPILib structs.
+ * Packs an array of WPILib structs into a LogValue.
  */
-template<typename T>
+template<wpi::StructSerializable T>
 LogValue MakeStructArrayValue(std::span<const T> structArray) {
-  auto& descriptor = T::struct_type;
+  using S = wpi::Struct<typename std::remove_cvref_t<T>>;
 
-  // Serialize array to bytes
-  std::vector<uint8_t> buffer(descriptor.GetSize() * structArray.size());
+  std::vector<uint8_t> buffer(S::GetSize() * structArray.size());
   for (size_t i = 0; i < structArray.size(); ++i) {
-    std::span<uint8_t> slice(buffer.data() + i * descriptor.GetSize(),
-                             descriptor.GetSize());
-    descriptor.Pack(slice, structArray[i]);
+    std::span<uint8_t> slice(buffer.data() + i * S::GetSize(), S::GetSize());
+    S::Pack(slice, structArray[i]);
   }
 
-  // Get schema bytes
   auto schemaBytes = wpi::GetStructSchemaBytes<T>();
 
-  // Collect all schemas (including nested structs)
   std::unordered_map<std::string, std::vector<uint8_t>> allSchemas;
   wpi::ForEachStructSchema<T>([&allSchemas](std::string_view name, std::string_view schema) {
     allSchemas[std::string(name)] = std::vector<uint8_t>(schema.begin(), schema.end());
   });
 
-  // Create LogValue with type string, schema, all nested schemas, and array flag
-  return LogValue(buffer, std::string(descriptor.GetTypeName()), schemaBytes, allSchemas, true);
+  // Use struct: prefixed type string for NT4 arrays (e.g., "struct:Pose2d[]")
+  std::string typeString = wpi::GetStructTypeString<T>();
+  typeString += "[]";
+
+  LogValue value(buffer, typeString, schemaBytes, allSchemas, true);
+  value.SetSchemaRegistrar([](nt::NetworkTableInstance& inst) {
+    inst.AddStructSchema<T>();
+  });
+  return value;
 }
 
-}  // namespace tkit
+/**
+ * Packs an array of WPILib structs into a LogValue (vector overload).
+ */
+template<wpi::StructSerializable T>
+LogValue MakeStructArrayValue(const std::vector<T>& structArray) {
+  return MakeStructArrayValue<T>(std::span<const T>(structArray));
+}
+
+}

@@ -13,64 +13,50 @@
 namespace tkit {
 
 /**
- * WPILogWriter - Writes telemetry data to WPILOG files.
+ * Receiver that writes logged telemetry to a WPILib DataLog (.wpilog).
  *
- * Uses WPILib's DataLog format for file output. Files are compatible with
- * AdvantageScope, Glass, and other WPILib visualization tools.
- *
- * This supports all LogValue types, as well as to thread-safe logging via LogTable.
- *
- * Example Usage:
- *
- *   auto& logger = Logger::GetInstance();
- *   logger.AddReceiver(
- *     std::make_unique<WPILogWriter>("/home/lvuser/logs")
- *   );
+ * Output files can be opened in AdvantageScope, Glass, and other WPILib tools.
+ * All LogValue types are supported.
  */
 class WPILogWriter : public LogDataReceiver {
  public:
   /**
-   * Create a WPILogWriter that writes to the specified directory.
+   * Writes log files to the given directory.
    *
-   * @param logPath Directory path where log files will be created
-   *                (default: "/home/lvuser/logs" for RoboRIO)
+   * Defaults to the standard RoboRIO log path.
    */
   explicit WPILogWriter(std::string_view logPath = "/home/lvuser/logs");
 
-  // LogDataReceiver interface
+  // LogDataReceiver
   void OnStart() override;
   void OnUpdate(const LogTable& table, int64_t timestamp) override;
   void OnEnd() override;
 
  private:
   /**
-   * Get or create a DataLog entry for the given key and value type.
-   *
-   * @param key The log key (e.g., "/Drivetrain/Speed")
-   * @param value The value to log
-   * @param unit Unit metadata for AdvantageScope (e.g., "m/s", "radians")
-   * @return Entry ID for appending data
+   * Returns an existing DataLog entry or creates a new one if needed.
    */
-  int GetOrCreateEntry(std::string_view key, const LogValue& value, std::string_view unit = "");
+  int GetOrCreateEntry(
+      std::string_view key,
+      const LogValue& value,
+      std::string_view unit = "");
 
   /**
-   * Append a value to the DataLog.
-   *
-   * @param entryId The entry ID
-   * @param value The value to append
-   * @param timestamp Timestamp in microseconds
+   * Appends a single value to the log.
    */
   void AppendValue(int entryId, const LogValue& value, int64_t timestamp);
 
-  /**
-   * Generate a log file name with timestamp.
-   */
+  /// Builds a log file name based on the current time.
   std::string GenerateLogFileName() const;
 
   std::string m_logPath;
   std::unique_ptr<wpi::log::DataLogWriter> m_log;
-  std::unordered_map<std::string, int> m_entryIds;  // key -> entry ID
-  std::unordered_map<std::string, LogValue> m_lastValues;  // For change detection
+
+  // Cache of log entry IDs by key.
+  std::unordered_map<std::string, int> m_entryIds;
+
+  // Last written values, used to skip unchanged data.
+  std::unordered_map<std::string, LogValue> m_lastValues;
 };
 
-}  // namespace tkit
+} 

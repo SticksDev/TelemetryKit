@@ -16,55 +16,41 @@ class LogDataReceiver;
 class LoggableInputs;
 
 /**
- * Logger - Main singleton logger for TelemetryKit.
+ * Global logger singleton.
  *
- * The Logger is the central hub for recording telemetry data. It manages
- * the log table and coordinates with receivers (file writers, NetworkTables
- * publishers, etc.).
+ * Owns the root LogTable and fans out data to registered receivers
+ * (files, NetworkTables, etc.).
  */
 class Logger {
  public:
-  /**
-   * Get the singleton Logger instance.
-   */
+  /// Access the global logger instance.
   static Logger& GetInstance();
 
-  // Lifecycle methods
+  // Lifecycle -------------------------------------------------------------
 
   /**
-   * Start logging.
-   *
-   * Initializes all receivers and prepares for recording.
-   * Safe to call multiple times (idempotent).
+   * Starts logging and initializes all receivers.
+   * Safe to call more than once.
    */
   void Start();
 
   /**
-   * Update the logger.
-   *
-   * Call this once per periodic cycle to send logged data to all receivers.
-   * This is when data is written to files and published to NetworkTables.
+   * Pushes the current log table to all receivers.
+   * Call once per periodic loop.
    */
   void Periodic();
 
   /**
-   * End logging.
-   *
-   * Closes all receivers and cleans up resources.
+   * Stops logging and shuts down receivers.
    */
   void End();
 
-  // Recording API
+  // Recording -------------------------------------------------------------
 
   /**
-   * Record an output value with template type deduction.
+   * Record a value at the given key.
    *
-   * This is the primary API for logging data.
-   *
-   * Examples:
-   *   logger.RecordOutput("/Speed", 3.5);
-   *   logger.RecordOutput("/Enabled", true);
-   *   logger.RecordOutput("/Pose", pose2d);
+   * This is the common path for most logging calls.
    */
   template<typename T>
   void RecordOutput(std::string_view key, const T& value) {
@@ -73,14 +59,9 @@ class Logger {
   }
 
   /**
-   * Record an output value with unit metadata.
+   * Record a value with unit metadata.
    *
-   * Unit metadata is used by AdvantageScope for unit-aware graphing.
-   *
-   * Examples:
-   *   logger.RecordOutput("/Speed", 3.5, "m/s");
-   *   logger.RecordOutput("/Angle", 1.57, "radians");
-   *   logger.RecordOutput("/Current", 42.0, "amps");
+   * Units are used by tools like AdvantageScope for plotting.
    */
   template<typename T>
   void RecordOutput(std::string_view key, const T& value, std::string_view unit) {
@@ -88,22 +69,15 @@ class Logger {
     m_rootTable.Put(key, LogValue(value), unit);
   }
 
-  /**
-   * Record an output value (LogValue overload).
-   */
+  /// Explicit LogValue overloads (used internally and by helpers).
   void RecordOutput(std::string_view key, const LogValue& value);
-
-  /**
-   * Record an output value with unit metadata (LogValue overload).
-   */
   void RecordOutput(std::string_view key, const LogValue& value, std::string_view unit);
 
-
   /**
-   * Process input data (for AdvantageKit-style IO pattern).
+   * Input logging hook (AdvantageKit-style).
    *
-   * Currently just logs the inputs. In the future, this is where
-   * replay data would override real hardware inputs.
+   * Currently just records the value, but exists to support
+   * future log replay or simulation overrides.
    */
   template<typename T>
   void ProcessInput(std::string_view key, const T& value) {
@@ -111,64 +85,50 @@ class Logger {
   }
 
   /**
-   * Process inputs using LoggableInputs interface.
-   *
-   * Example:
-   *   m_gyro->UpdateInputs(m_gyroInputs);
-   *   logger.ProcessInputs("/Gyro", m_gyroInputs);
+   * Process a LoggableInputs object under a prefix.
    */
   void ProcessInputs(std::string_view key, const LoggableInputs& inputs);
 
-  // Table access
+  // Table access ----------------------------------------------------------
 
   /**
-   * Get a subtable for organized logging.
+   * Returns a prefixed view into the root log table.
    *
-   * Example:
-   *   auto gyroTable = logger.GetTable("/Gyro");
-   *   gyroTable.Put("Yaw", 45.0);
-   *   gyroTable.Put("Pitch", 10.0);
+   * Useful for grouping related values.
    */
   LogTable GetTable(std::string_view prefix);
 
   /**
-   * Get the root log table (for advanced usage).
+   * Direct access to the root table.
+   * Intended for advanced or internal use.
    */
   LogTable& GetRootTable() { return m_rootTable; }
 
-  // Receiver management
+  // Receiver management ---------------------------------------------------
 
   /**
-   * Add a data receiver (e.g., file writer, NetworkTables publisher).
-   *
-   * Receivers will be notified on each Periodic() call.
-   *
-   * Example:
-   *   logger.AddReceiver(std::make_unique<WPILogWriter>("/logs"));
+   * Adds a receiver that will be updated every Periodic() call.
    */
   void AddReceiver(std::unique_ptr<LogDataReceiver> receiver);
 
   /**
-   * Remove all receivers.
+   * Removes all registered receivers.
    */
   void RemoveAllReceivers();
 
-  // State
+  // State -----------------------------------------------------------------
 
-  /**
-   * Check if logging is currently active.
-   */
+  /// True while logging is active.
   bool IsLogging() const { return m_isLogging; }
 
   /**
-   * Get the current timestamp in microseconds.
+   * Returns a timestamp in microseconds.
    *
-   * Uses FPGA timestamp for consistency with WPILib.
+   * Uses FPGA time for consistency with WPILib logs.
    */
   static int64_t GetTimestampUs();
 
  private:
-  // Singleton - private constructor
   Logger() = default;
   ~Logger() = default;
   Logger(const Logger&) = delete;
@@ -180,13 +140,10 @@ class Logger {
   mutable std::mutex m_mutex;
 };
 
-// Convenience functions for global access
+// Free-function wrappers --------------------------------------------------
 
 /**
- * Record an output value (global convenience function).
- *
- * Example:
- *   tkit::RecordOutput("/Speed", 3.5);
+ * Convenience wrapper around Logger::RecordOutput().
  */
 template<typename T>
 inline void RecordOutput(std::string_view key, const T& value) {
@@ -194,11 +151,7 @@ inline void RecordOutput(std::string_view key, const T& value) {
 }
 
 /**
- * Record an output value with unit metadata (global convenience function).
- *
- * Example:
- *   tkit::RecordOutput("/Speed", 3.5, "m/s");
- *   tkit::RecordOutput("/Angle", 1.57, "radians");
+ * Convenience wrapper around Logger::RecordOutput() with units.
  */
 template<typename T>
 inline void RecordOutput(std::string_view key, const T& value, std::string_view unit) {
@@ -206,7 +159,7 @@ inline void RecordOutput(std::string_view key, const T& value, std::string_view 
 }
 
 /**
- * Process input value (global convenience function).
+ * Convenience wrapper around Logger::ProcessInput().
  */
 template<typename T>
 inline void ProcessInput(std::string_view key, const T& value) {
@@ -214,12 +167,10 @@ inline void ProcessInput(std::string_view key, const T& value) {
 }
 
 /**
- * Update the logger (global convenience function).
- *
- * Sends logged data to all receivers.
+ * Forwards to Logger::Periodic().
  */
 inline void Periodic() {
   Logger::GetInstance().Periodic();
 }
 
-}  // namespace tkit
+} 

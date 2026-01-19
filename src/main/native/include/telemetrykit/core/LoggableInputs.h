@@ -6,28 +6,27 @@ namespace tkit {
 class LogTable;
 
 /**
- * LoggableInputs - Base class for IO interface input recording pattern.
+ * Base class for logging hardware/input state.
  *
- * Implementations define what data flows INTO the robot code from hardware.
- * This is the core of the AdvantageKit input-first philosophy.
+ * Used by subsystems to expose the data coming *into* robot code
+ * (sensor readings, device state, etc.).
  */
 class LoggableInputs {
  public:
   virtual ~LoggableInputs() = default;
 
   /**
-   * Serialize this input struct to the log table.
-   *
-   * Each implementation should log all relevant input fields.
+   * Writes all relevant fields to the given log table.
    */
   virtual void ToLog(LogTable& table) const = 0;
 
   /**
-   * Optional: Deserialize from log table (for future replay support).
+   * Reads fields from the log table.
    *
+   * Intended for future log replay or simulation support.
    * Default implementation does nothing.
    */
   virtual void FromLog(const LogTable& table) {}
 };
 
-}  // namespace tkit
+} 

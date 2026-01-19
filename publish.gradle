@@ -7,7 +7,9 @@ ext.licenseFile = files("$rootDir/LICENSE.txt")
 
 def templateVendorFile = "TelemetryKit.json"
 
-def pubVersion = '1.0.1'
+// Read version from vendordep JSON (single source of truth)
+def vendorJson = new groovy.json.JsonSlurper().parseText(file(templateVendorFile).text)
+def pubVersion = vendorJson.version
 
 def outputsFolder = file("$buildDir/outputs")
 
@@ -227,8 +229,6 @@ task copyToWpilibLocal(type: Copy) {
 
     dependsOn publish
 
-    // Read FRC year from vendordep JSON during configuration
-    def vendorJson = new groovy.json.JsonSlurper().parseText(file(templateVendorFile).text)
     def frcYear = vendorJson.frcYear
     def wpilibMavenPath
 

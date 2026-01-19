@@ -5,10 +5,16 @@
 namespace tkit {
 
 NetworkTablesReceiver::NetworkTablesReceiver()
-  : m_inst(nt::NetworkTableInstance::GetDefault()) {}
+  : m_inst(nt::NetworkTableInstance::GetDefault()),
+    m_prefix(kDefaultPrefix) {}
 
 NetworkTablesReceiver::NetworkTablesReceiver(nt::NetworkTableInstance inst)
-  : m_inst(inst) {}
+  : m_inst(inst),
+    m_prefix(kDefaultPrefix) {}
+
+NetworkTablesReceiver::NetworkTablesReceiver(nt::NetworkTableInstance inst, std::string_view prefix)
+  : m_inst(inst),
+    m_prefix(prefix) {}
 
 void NetworkTablesReceiver::OnStart() {
   // Clear state
@@ -46,7 +52,8 @@ void NetworkTablesReceiver::OnEnd() {
 }
 
 void NetworkTablesReceiver::PublishValue(std::string_view key, const LogValue& value, int64_t timestamp) {
-  std::string keyStr(key);
+  // Build full key with prefix (e.g., "/TelemetryKit/Drive/Speed")
+  std::string keyStr = m_prefix + std::string(key);
 
   // Check if we already have a publisher for this key
   auto pubIt = m_publishers.find(keyStr);
@@ -174,17 +181,10 @@ void NetworkTablesReceiver::PublishValue(std::string_view key, const LogValue& v
       // For structs, publish as RawTopic with type string metadata.
       // NT4 clients like AdvantageScope will use the type string and schema to deserialize.
       if (pubIt == m_publishers.end()) {
-        std::string typeStr = value.GetTypeString();  // e.g., "Pose2d", "SwerveModuleState"
+        std::string typeStr = value.GetTypeString();  // e.g., "struct:Pose2d"
 
-        // Publish all struct schemas (including nested ones like Translation2d in Pose2d)
-        const auto& allSchemas = value.GetAllSchemas();
-        for (const auto& [schemaName, schemaBytes] : allSchemas) {
-          // Only publish each schema once
-          if (m_publishedSchemas.find(schemaName) == m_publishedSchemas.end()) {
-            m_inst.AddSchema(schemaName, "structschema", schemaBytes);
-            m_publishedSchemas.insert(schemaName);
-          }
-        }
+        // Register struct schema with NT (handles nested schemas automatically)
+        value.RegisterSchema(m_inst);
 
         // Create RawTopic publisher with type string
         auto topic = m_inst.GetRawTopic(keyStr);

@@ -4,7 +4,6 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
-#include <unordered_set>
 #include <variant>
 
 #include <networktables/BooleanArrayTopic.h>
@@ -26,41 +25,43 @@
 namespace tkit {
 
 /**
- * NetworkTablesReceiver - Publishes telemetry data to NetworkTables 4.
+ * Receiver that writes logged telemetry to NetworkTables (NT4).
  *
- * Publishes all logged values to NetworkTables for real-time monitoring.
- * Compatible with dashboards like Shuffleboard, Glass, and AdvantageScope.
- *
- * Example Usage:
- *
- *   auto& logger = Logger::GetInstance();
- *   logger.AddReceiver(
- *     std::make_unique<NetworkTablesReceiver>()
- *   );
+ * All keys are published under a root prefix (default: "/TelemetryKit").
+ * For example, "/Drive/Speed" becomes "/TelemetryKit/Drive/Speed".
  */
 class NetworkTablesReceiver : public LogDataReceiver {
  public:
+  /// Default root path used for publishing.
+  static constexpr std::string_view kDefaultPrefix = "/TelemetryKit";
+
   /**
-   * Create a NetworkTablesReceiver using the default instance.
+   * Uses the default NetworkTables instance and the default prefix.
    */
   NetworkTablesReceiver();
 
   /**
-   * Create a NetworkTablesReceiver with a custom NT instance.
+   * Uses a specific NetworkTables instance and the default prefix.
    *
-   * @param inst The NetworkTables instance to use
+   * @param inst NetworkTables instance to publish through.
    */
   explicit NetworkTablesReceiver(nt::NetworkTableInstance inst);
 
-  // LogDataReceiver interface
+  /**
+   * Uses a specific NetworkTables instance and a custom root prefix.
+   *
+   * @param inst NetworkTables instance to publish through.
+   * @param prefix Root path (e.g., "/MyRobot").
+   */
+  NetworkTablesReceiver(nt::NetworkTableInstance inst, std::string_view prefix);
+
+  // LogDataReceiver
   void OnStart() override;
   void OnUpdate(const LogTable& table, int64_t timestamp) override;
   void OnEnd() override;
 
  private:
-  /**
-   * Variant type to hold different publisher types.
-   */
+  /// Holds the publisher for a key; type depends on the logged value.
   using PublisherVariant = std::variant<
     std::monostate,
     nt::BooleanPublisher,
@@ -77,18 +78,22 @@ class NetworkTablesReceiver : public LogDataReceiver {
   >;
 
   /**
-   * Publish a value to NetworkTables.
+   * Publishes one key/value pair.
    *
-   * @param key The key (e.g., "/Drivetrain/Speed")
-   * @param value The value to publish
-   * @param timestamp Timestamp in microseconds
+   * @param key Log key (e.g., "/Drivetrain/Speed").
+   * @param value Value to publish.
+   * @param timestamp Timestamp in microseconds.
    */
   void PublishValue(std::string_view key, const LogValue& value, int64_t timestamp);
 
   nt::NetworkTableInstance m_inst;
+  std::string m_prefix;
+
+  // Per-key publisher cache so we don't recreate publishers every update.
   std::unordered_map<std::string, PublisherVariant> m_publishers;
-  std::unordered_map<std::string, LogValue> m_lastValues;  // For change detection
-  std::unordered_set<std::string> m_publishedSchemas;  // Track published schemas to avoid duplicates
+
+  // Last published values for simple change detection.
+  std::unordered_map<std::string, LogValue> m_lastValues;
 };
 
-}  // namespace tkit
+} 

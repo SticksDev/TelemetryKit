@@ -8,41 +8,39 @@ namespace tkit {
 class LogTable;
 
 /**
- * LogDataReceiver - Abstract base class for data receivers.
+ * Base class for telemetry log receivers.
  *
- * Receivers process the log table and send data to their destinations.
- * Examples: WPILog file writer, NetworkTables publisher, console logger.
- *
- * Each receiver is responsible for its own change detection and optimization.
-*/
+ * A receiver consumes the current LogTable and sends data somewhere
+ * (file, NetworkTables, console, etc.).
+ */
 class LogDataReceiver {
  public:
   virtual ~LogDataReceiver() = default;
 
   /**
-   * Called when logging starts.
+   * Called once when logging begins.
    *
-   * Use this to initialize resources in custom receivers.
+   * Use this to allocate or initialize resources.
    */
   virtual void OnStart() = 0;
 
   /**
-   * Called each periodic cycle with the current log table.
+   * Called periodically with the current log data.
    *
-   * The receiver should process the table and send data to its destination.
-   * Change detection is the receiver's responsibility.
+   * Receivers are responsible for deciding what to publish
+   * (including any change detection or filtering).
    *
-   * @param table The current log table with all recorded data
-   * @param timestamp Current timestamp in microseconds
+   * @param table Current log table
+   * @param timestamp Timestamp in microseconds
    */
   virtual void OnUpdate(const LogTable& table, int64_t timestamp) = 0;
 
   /**
-   * Called when logging ends.
+   * Called once when logging ends.
    *
-   * You should deinit resources in custom receivers here.
+   * Clean up any resources here.
    */
   virtual void OnEnd() = 0;
 };
 
-}  // namespace tkit
+} 

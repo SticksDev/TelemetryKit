@@ -15,113 +15,91 @@
 namespace tkit {
 
 /**
- * Helper functions to log WPILib structs with field decomposition.
+ * Helpers for logging common WPILib structs by decomposing them into fields.
  *
- * These functions log individual fields only (not the raw struct),
- * making them easily visible and plottable in dashboards.
- *
- * For logging the raw struct, use the regular RecordOutput() method.
+ * Each function expands the struct into individual numeric entries so they
+ * can be plotted or inspected easily in dashboards.
  */
 
-/**
- * Log a Pose2d with decomposed fields.
- *
- * Logs:
- *   key/X (double meters)
- *   key/Y (double meters)
- *   key/Rotation (double radians)
- */
-inline void LogPose2d(LogTable& table, std::string_view key, const frc::Pose2d& pose) {
+inline void LogPose2d(LogTable& table,
+                      std::string_view key,
+                      const frc::Pose2d& pose) {
   std::string baseKey(key);
   table.Put(baseKey + "/X", pose.X().value());
   table.Put(baseKey + "/Y", pose.Y().value());
   table.Put(baseKey + "/Rotation", pose.Rotation().Radians().value());
 }
 
-/**
- * Log a Pose3d with decomposed fields.
- *
- * Logs:
- *   key/X, Y, Z (double meters)
- *   key/Roll, Pitch, Yaw (double radians)
- */
-inline void LogPose3d(LogTable& table, std::string_view key, const frc::Pose3d& pose) {
+inline void LogPose3d(LogTable& table,
+                      std::string_view key,
+                      const frc::Pose3d& pose) {
   std::string baseKey(key);
   table.Put(baseKey + "/X", pose.X().value());
   table.Put(baseKey + "/Y", pose.Y().value());
   table.Put(baseKey + "/Z", pose.Z().value());
 
-  auto quaternion = pose.Rotation().GetQuaternion();
-  table.Put(baseKey + "/QuaternionW", quaternion.W());
-  table.Put(baseKey + "/QuaternionX", quaternion.X());
-  table.Put(baseKey + "/QuaternionY", quaternion.Y());
-  table.Put(baseKey + "/QuaternionZ", quaternion.Z());
+  auto q = pose.Rotation().GetQuaternion();
+  table.Put(baseKey + "/QuaternionW", q.W());
+  table.Put(baseKey + "/QuaternionX", q.X());
+  table.Put(baseKey + "/QuaternionY", q.Y());
+  table.Put(baseKey + "/QuaternionZ", q.Z());
 }
 
-/**
- * Log a Translation2d with decomposed fields.
- */
-inline void LogTranslation2d(LogTable& table, std::string_view key, const frc::Translation2d& translation) {
+inline void LogTranslation2d(LogTable& table,
+                             std::string_view key,
+                             const frc::Translation2d& translation) {
   std::string baseKey(key);
   table.Put(baseKey + "/X", translation.X().value());
   table.Put(baseKey + "/Y", translation.Y().value());
 }
 
-/**
- * Log a Translation3d with decomposed fields.
- */
-inline void LogTranslation3d(LogTable& table, std::string_view key, const frc::Translation3d& translation) {
+inline void LogTranslation3d(LogTable& table,
+                             std::string_view key,
+                             const frc::Translation3d& translation) {
   std::string baseKey(key);
   table.Put(baseKey + "/X", translation.X().value());
   table.Put(baseKey + "/Y", translation.Y().value());
   table.Put(baseKey + "/Z", translation.Z().value());
 }
 
-/**
- * Log a SwerveModuleState with decomposed fields.
- */
-inline void LogSwerveModuleState(LogTable& table, std::string_view key, const frc::SwerveModuleState& state) {
+inline void LogSwerveModuleState(LogTable& table,
+                                 std::string_view key,
+                                 const frc::SwerveModuleState& state) {
   std::string baseKey(key);
   table.Put(baseKey + "/Speed", state.speed.value());
   table.Put(baseKey + "/Angle", state.angle.Radians().value());
 }
 
-/**
- * Log a SwerveModulePosition with decomposed fields.
- */
-inline void LogSwerveModulePosition(LogTable& table, std::string_view key, const frc::SwerveModulePosition& position) {
+inline void LogSwerveModulePosition(LogTable& table,
+                                    std::string_view key,
+                                    const frc::SwerveModulePosition& position) {
   std::string baseKey(key);
   table.Put(baseKey + "/Distance", position.distance.value());
   table.Put(baseKey + "/Angle", position.angle.Radians().value());
 }
 
-/**
- * Log an array of SwerveModuleStates with decomposed fields.
- *
- * Example:
- *   LogSwerveModuleStates(table, "/Drive/ModuleStates", states);
- *   // Logs: /Drive/ModuleStates/Module0/Speed
- *   //       /Drive/ModuleStates/Module0/Angle
- *   //       /Drive/ModuleStates/Module1/Speed
- *   //       ... etc
- */
-inline void LogSwerveModuleStates(LogTable& table, std::string_view key,
-                                   const std::vector<frc::SwerveModuleState>& states) {
+inline void LogSwerveModuleStates(
+    LogTable& table,
+    std::string_view key,
+    const std::vector<frc::SwerveModuleState>& states) {
   for (size_t i = 0; i < states.size(); ++i) {
-    std::string moduleKey = std::string(key) + "/Module" + std::to_string(i);
-    LogSwerveModuleState(table, moduleKey, states[i]);
+    LogSwerveModuleState(
+        table,
+        std::string(key) + "/Module" + std::to_string(i),
+        states[i]);
   }
 }
 
-/**
- * Log an array of SwerveModulePositions with decomposed fields.
- */
-inline void LogSwerveModulePositions(LogTable& table, std::string_view key,
-                                      const std::vector<frc::SwerveModulePosition>& positions) {
+inline void LogSwerveModulePositions(
+    LogTable& table,
+    std::string_view key,
+    const std::vector<frc::SwerveModulePosition>& positions) {
   for (size_t i = 0; i < positions.size(); ++i) {
-    std::string moduleKey = std::string(key) + "/Module" + std::to_string(i);
-    LogSwerveModulePosition(table, moduleKey, positions[i]);
+    LogSwerveModulePosition(
+        table,
+        std::string(key) + "/Module" + std::to_string(i),
+        positions[i]);
   }
 }
 
-}  // namespace tkit
+} 

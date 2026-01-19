@@ -8,6 +8,8 @@
   },
   "C_Cpp.default.configurationProvider": "vscode-wpilib",
   "files.associations": {
-    "vector": "cpp"
+    "vector": "cpp",
+    "optional": "cpp",
+    "string_view": "cpp"
   }
 }
