@@ -198,18 +198,21 @@ TEST(UnitsTest, PutToSubtable) {
 }
 
 // ============================================================================
-// Type trait tests
+// Concept tests
 // ============================================================================
 
-TEST(UnitsTest, IsUnitTypeDetection) {
-  // Unit types should be detected
-  EXPECT_TRUE(detail::is_unit_type_v<units::meter_t>);
-  EXPECT_TRUE(detail::is_unit_type_v<units::degree_t>);
-  EXPECT_TRUE(detail::is_unit_type_v<units::volt_t>);
-  EXPECT_TRUE(detail::is_unit_type_v<units::meters_per_second_t>);
+TEST(UnitsTest, UnitTypeConceptDetection) {
+  // Unit types should satisfy the concept
+  static_assert(UnitType<units::meter_t>);
+  static_assert(UnitType<units::degree_t>);
+  static_assert(UnitType<units::volt_t>);
+  static_assert(UnitType<units::meters_per_second_t>);
 
-  // Non-unit types should not be detected
-  EXPECT_FALSE(detail::is_unit_type_v<double>);
-  EXPECT_FALSE(detail::is_unit_type_v<int>);
-  EXPECT_FALSE(detail::is_unit_type_v<std::string>);
+  // Non-unit types should not satisfy the concept
+  static_assert(!UnitType<double>);
+  static_assert(!UnitType<int>);
+  static_assert(!UnitType<std::string>);
+
+  // If we got here, all static_asserts passed
+  SUCCEED();
 }
